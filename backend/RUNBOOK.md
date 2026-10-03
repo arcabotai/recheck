@@ -1,5 +1,76 @@
 # Recheck backend foundation
 
+## Bounded real demo CLI (current addition)
+
+This section supersedes the foundation-only orchestration statements below.
+The protected POST routes remain unavailable: the operator starts this demo **only
+through the CLI**. Public UI remains a read-only synthetic evidence ledger.
+
+Parent must first review/apply `supabase/migrations/20261004000100_recheck_demo.sql`
+and inject `AI_GATEWAY_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SECRET_KEY` into the
+server process environment. No credentials files are loaded. New Supabase
+`sb_secret_*` keys use the `apikey` header, not a bearer JWT. Never inject this key
+into frontend assets, model messages, evaluator children, or user authentication.
+
+```sh
+cd /root/cad/recheck-backend
+python -m backend.demo --output-dir /root/cad/recheck-demo-output
+RECHECK_STATE_PATH=/root/cad/recheck-demo-output/state.json \
+  python -m backend.server --host 127.0.0.1 --port 8787
+python -W error::ResourceWarning -m unittest discover -s tests/backend -v
+```
+
+CLI exit 0 means the complete synthetic workflow and final durable readback
+succeeded; exit 2 reports a sanitized blocker. Without credentials it fails
+before making output directories or executing anything. Each stage writes the
+exact returned candidate, actual evaluator result and receipt. `state.json` is
+atomically replaced, synthetic-only, and contains the existing learn/replay/repair
+contract. `/api/state` reads only the explicit `RECHECK_STATE_PATH`; absent means
+the original blocked state, malformed/oversized/inconsistent snapshots fail closed.
+`/api/health` continues to report HTTP mutable orchestration as unbound; a snapshot
+is not proof of a live mutable API or current execution.
+
+Workflow: Vercel AI Gateway OpenAI-compatible POST to
+`https://ai-gateway.vercel.sh/v1/chat/completions`, requested model
+`anthropic/claude-sonnet-4.6`, actual returned model/request ID recorded. The model
+receives only synthetic requirements plus the exact allowed restricted JSON AST
+schema. A bounded Node subprocess imports the unchanged evaluator and its exact
+AST validator; arbitrary code/fences/extra fields cannot execute. v1 must produce
+all 11 independent checks and a bound works receipt before any experience write.
+Dedicated Supabase experience insertion is read back exactly. A second independent
+GET retrieves that stored candidate; its exact bytes execute unchanged against all
+18 v2 checks. Only an observed fails verdict permits a fresh repair model request.
+Repair is independently evaluated against unchanged v2 checks. The final run JSON
+is inserted into the dedicated run table and independently read back before the
+public snapshot is marked complete. No fixture paths are used by production.
+
+Limits: normally two model requests; hard cap three, 2048 output tokens each;
+zero retries; aggregate 120-second CLI wall-clock alarm plus per-operation budget,
+40-second model requests, 10-second durable operations, 5-second outer evaluator
+and 1-second evaluator worker. Output and response limits are bounded. The CLI
+requires Linux/POSIX for its wall-clock alarm and process-group cleanup.
+
+`run_demo(output_dir, model=..., store=..., executor=...)` is the trusted injection
+seam. Explicit test adapters must have truthful `.provider` labels and honor the
+passed timeouts. Model callable `(prompt, timeout)` returns `{text, model,
+requestId}`. Executor callable `(text, suite, provenance, timeout)` returns the
+actual evaluator-compatible result and has `.provider`; `.verified` defaults
+false. For custom providers, wrapping receipts must reflect actual provider
+execution, not merely relabel local results. Store supplies `write_verified(kind,
+record, timeout)` and `read(kind, id, timeout)` with exact readbacks. The default
+executor is **local-node**, `environment.verified:false`; subprocess isolation is
+not an OS sandbox and never claims Supabase Compute. Memory provider is actual
+**Supabase**; optional **Honcho integration is unavailable**, not simulated.
+
+Tests inject clearly labelled model/store protocol fixtures but execute the actual
+Node evaluator. This proves orchestration/evaluation, not live Gateway/Supabase
+availability. Migration has not been applied or run against PostgreSQL here.
+No remote provisioning, production users/private memories, push, or deployment.
+Use a dedicated output directory per run; concurrent CLI writers to one directory
+are unsupported. Authentication/idempotency for starting runs via POST remain
+explicitly outside this CLI-only scope.
+
+
 ## Run and verify
 
 From the repository root (the implementation worker's isolated checkout is
