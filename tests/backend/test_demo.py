@@ -135,6 +135,11 @@ class DemoTests(unittest.TestCase):
                 run_demo(output, config={})
             self.assertEqual(failure.exception.code, 'missing_ai_gateway_credentials')
             self.assertFalse(output.exists())
+            with self.assertRaises(DemoError) as missing_honcho:
+                run_demo(output, model=LabelledModelFixture(), store=LabelledStoreFixture(),
+                         config={}, require_honcho=True)
+            self.assertEqual(missing_honcho.exception.code, 'missing_honcho_credentials')
+            self.assertFalse(output.exists())
 
 
     def test_gateway_protocol_is_bounded_and_records_observed_model(self):
@@ -232,6 +237,79 @@ class DemoTests(unittest.TestCase):
             state = run_demo(directory, model=model, store=LabelledStoreFixture())
         self.assertEqual(len(model.calls), 1)
         self.assertNotIn('SECRET', json.dumps(state))
+
+
+    def test_real_honcho_seam_ingests_only_passing_experience_and_feeds_retrieved_lesson(self):
+        from backend.demo import run_demo
+        class LabelledHonchoFixture:
+            provider = 'labelled-test-honcho'
+            def __init__(self):
+                self.record = None
+                self.retrieved = False
+            def ingest_verified(self, experience, timeout):
+                self.asserted = experience['verification']['verdict'] == 'works'
+                self.record = copy.deepcopy(experience)
+                return {'messageId': 'fixture-message', 'sessionId': 'fixture-session'}
+            def retrieve(self, handle, experience, timeout):
+                self.retrieved = True
+                return dict(candidateId=experience['id'], artifactHash=experience['verification']['receipt']['artifactHash'],
+                            lesson='ACTUAL RETRIEVED HONCHO FIXTURE LESSON')
+        memory, model = LabelledHonchoFixture(), LabelledModelFixture()
+        with tempfile.TemporaryDirectory() as directory:
+            state = run_demo(directory, model=model, store=LabelledStoreFixture(), memory=memory)
+        self.assertEqual(state['status'], 'complete')
+        self.assertTrue(memory.asserted)
+        self.assertTrue(memory.retrieved)
+        self.assertEqual(state['memory']['provider'], memory.provider)
+        self.assertEqual(state['memory']['lesson'], 'ACTUAL RETRIEVED HONCHO FIXTURE LESSON')
+        self.assertIn('ACTUAL RETRIEVED HONCHO FIXTURE LESSON', model.calls[1])
+
+
+    def test_honcho_v3_protocol_readbacks_and_exact_namespace(self):
+        from backend.demo import HonchoMemory, run_demo
+        calls, peers, sessions, messages = [], {}, {}, {}
+        def labelled_honcho_transport(request, timeout):
+            from urllib.parse import urlsplit
+            path = urlsplit(request.full_url).path
+            calls.append(request)
+            body = json.loads(request.data) if request.data else {}
+            workspace = HonchoMemory.WORKSPACE
+            self.assertTrue(path.startswith('/v3/workspaces/' + workspace + '/'))
+            self.assertGreater(timeout, 0)
+            self.assertEqual(request.get_header('Authorization'), 'Bearer explicit-honcho-fixture')
+            if path.endswith('/peers'):
+                row = dict(body, workspace_id=workspace)
+                peers[row['id']] = row
+                return row
+            if path.endswith('/peers/list'):
+                return {'items': [peers[body['filters']['id']]]}
+            if path.endswith('/sessions'):
+                row = dict(body, workspace_id=workspace)
+                sessions[row['id']] = row
+                return row
+            if path.endswith('/sessions/list'):
+                return {'items': [sessions[body['filters']['id']]]}
+            if path.endswith('/messages'):
+                row = dict(body['messages'][0], id='fixture-message-id', workspace_id=workspace,
+                           session_id=path.split('/')[-2])
+                messages[row['id']] = row
+                return [row]
+            if path.endswith('/search'):
+                return list(messages.values())
+            return messages[path.split('/')[-1]]
+        adapter = HonchoMemory({'HONCHO_API_KEY': 'explicit-honcho-fixture'}, test_transport=labelled_honcho_transport)
+        model = LabelledModelFixture()
+        with tempfile.TemporaryDirectory() as directory:
+            state = run_demo(directory, model=model, store=LabelledStoreFixture(), memory=adapter, config={})
+        self.assertEqual(state['status'], 'complete')
+        self.assertEqual(state['memory']['provider'], 'Honcho')
+        self.assertEqual(len(calls), 7)
+        self.assertEqual([request.get_method() for request in calls], ['POST'] * 5 + ['GET', 'POST'])
+        message = messages['fixture-message-id']
+        content = json.loads(message['content'])
+        self.assertEqual(content['artifactHash'], state['stages'][0]['receipt']['artifactHash'])
+        self.assertIn(content['lesson'], model.calls[1])
+        self.assertNotIn('candidate', content)  # Supabase retains the authoritative AST.
 
 
 if __name__ == '__main__':

@@ -179,6 +179,95 @@ class SupabaseDemoStore:
         return observed
 
 
+class HonchoMemory:
+    """Honcho v3 message persistence, not inferred reasoning or private memory."""
+    provider = 'Honcho'
+    WORKSPACE = 'recheck-hackathon-20261003'
+    ORIGIN = 'https://api.honcho.dev'
+    def __init__(self, config, *, test_transport=None):
+        self.key = config.get('HONCHO_API_KEY', '')
+        if not isinstance(self.key, str) or not self.key or '\r' in self.key or '\n' in self.key:
+            raise DemoError('missing_honcho_credentials')
+        self.transport = test_transport or http_json
+    def request(self, path, timeout, body=None):
+        request = Request(self.ORIGIN + '/v3/workspaces/' + self.WORKSPACE + path,
+                          data=None if body is None else json.dumps(body).encode(),
+                          headers={'Authorization': 'Bearer ' + self.key, 'Content-Type': 'application/json',
+                                   'Accept': 'application/json'}, method='GET' if body is None else 'POST')
+        try:
+            return self.transport(request, timeout)
+        except (BackendError, OSError, ValueError, TypeError):
+            raise DemoError('honcho_unavailable') from None
+    def content(self, experience):
+        result = experience['verification']
+        if (result.get('verdict') != 'works' or result.get('status') != 'finished'
+                or len(result.get('checks', [])) != 11 or not all(c.get('passed') is True for c in result['checks'])
+                or result['receipt']['artifactHash'] != digest(experience['candidate'])):
+            raise DemoError('honcho_requires_passing_experience')
+        return {'candidateId': experience['id'], 'artifactHash': result['receipt']['artifactHash'],
+                'sourceRunId': experience['sourceRunId'], 'syntheticData': True, 'lesson': experience['lesson']}
+    def ingest_verified(self, experience, timeout):
+        budget = Budget(min(timeout, 120))
+        content = self.content(experience)
+        raw = json.dumps(content, sort_keys=True)
+        if self.key in raw:
+            raise DemoError('unsafe_honcho_record')
+        # Per-run peer/session prevents any other synthetic run or private namespace recall.
+        peer = 'recheck-' + experience['sourceRunId']
+        session = 'recheck-' + experience['id']
+        metadata = {'syntheticData': True, 'sourceRunId': experience['sourceRunId']}
+        disabled = {name: {'enabled': False} for name in ('reasoning', 'summary', 'dream')}
+        observed = self.request('/peers', budget.remaining(), {'id': peer, 'metadata': metadata,
+                                                              'configuration': {'reasoning': {'enabled': False}}})
+        listed = self.request('/peers/list?size=2', budget.remaining(), {'filters': {'id': peer}})
+        rows = listed.get('items', []) if isinstance(listed, dict) else []
+        if (not isinstance(observed, dict) or observed.get('id') != peer or len(rows) != 1
+                or rows[0].get('id') != peer or rows[0].get('workspace_id') != self.WORKSPACE
+                or rows[0].get('metadata') != metadata):
+            raise DemoError('honcho_peer_readback_mismatch')
+        observed = self.request('/sessions', budget.remaining(), {'id': session, 'metadata': metadata,
+                           'configuration': disabled, 'peers': {peer: {'observe_me': False, 'observe_others': False}}})
+        listed = self.request('/sessions/list?size=2', budget.remaining(), {'filters': {'id': session}})
+        rows = listed.get('items', []) if isinstance(listed, dict) else []
+        if (not isinstance(observed, dict) or observed.get('id') != session or len(rows) != 1
+                or rows[0].get('id') != session or rows[0].get('workspace_id') != self.WORKSPACE
+                or rows[0].get('metadata') != metadata
+                or any(rows[0].get('configuration', {}).get(name, {}).get('enabled') is not False for name in disabled)):
+            raise DemoError('honcho_session_readback_mismatch')
+        messages = self.request('/sessions/' + session + '/messages', budget.remaining(),
+                               {'messages': [{'peer_id': peer, 'content': raw, 'metadata': content,
+                                              'configuration': {'reasoning': {'enabled': False}}}]})
+        if (not isinstance(messages, list) or len(messages) != 1 or not isinstance(messages[0], dict)
+                or not re.fullmatch(r'[A-Za-z0-9_-]{1,512}', messages[0].get('id', ''))):
+            raise DemoError('invalid_honcho_message_response')
+        handle = {'sessionId': session, 'messageId': messages[0]['id'], 'peerId': peer}
+        recalled = self._get(handle, experience, budget.remaining())
+        if recalled != content:
+            raise DemoError('honcho_message_readback_mismatch')
+        return handle
+    def retrieve(self, handle, experience, timeout):
+        results = self.request('/sessions/' + handle['sessionId'] + '/search', timeout,
+                               {'query': 'Successful synthetic v1 access-control lesson candidate ' + experience['id'], 'limit': 3})
+        if not isinstance(results, list):
+            raise DemoError('invalid_honcho_search_response')
+        matches = [row for row in results if isinstance(row, dict) and row.get('id') == handle['messageId']]
+        if len(matches) != 1:
+            raise DemoError('honcho_lesson_not_retrieved')
+        return self.validate_message(matches[0], handle, experience)
+    def _get(self, handle, experience, timeout):
+        message = self.request('/sessions/' + handle['sessionId'] + '/messages/' + handle['messageId'], timeout)
+        return self.validate_message(message, handle, experience)
+    def validate_message(self, message, handle, experience):
+        if (not isinstance(message, dict) or message.get('workspace_id') != self.WORKSPACE
+                or message.get('session_id') != handle['sessionId'] or message.get('peer_id') != handle['peerId']
+                or message.get('id') != handle['messageId'] or not isinstance(message.get('content'), str)):
+            raise DemoError('invalid_honcho_recall')
+        recalled = strict_json(message['content'])
+        if recalled != self.content(experience):
+            raise DemoError('honcho_recall_mismatch')
+        return recalled
+
+
 class LocalNodeExecutor:
     provider = 'local-node'
     verified = False  # A subprocess is NOT an OS sandbox or Compute evidence.
@@ -241,7 +330,7 @@ def verify_result(result, text, suite, provenance, executor):
     return result
 
 
-def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, total_seconds=120):
+def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, memory=None, require_honcho=False, total_seconds=120):
     """Adapters are explicit trusted seams, never selected from request bodies or fixture defaults."""
     budget = Budget(total_seconds)
     config = dict(os.environ if config is None else config)
@@ -249,7 +338,11 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
     model = model if model is not None else GatewayModel(config)
     store = store if store is not None else SupabaseDemoStore(config)
     executor = executor if executor is not None else LocalNodeExecutor()
-    for adapter in (model, store, executor):
+    if memory is None and config.get('HONCHO_API_KEY'):
+        memory = HonchoMemory(config)
+    if require_honcho and memory is None:
+        raise DemoError('missing_honcho_credentials')
+    for adapter in ((model, store, executor, memory) if memory is not None else (model, store, executor)):
         if not isinstance(getattr(adapter, 'provider', None), str) or not adapter.provider:
             raise DemoError('unlabelled_adapter')
     directory = Path(output_dir).resolve()
@@ -257,7 +350,7 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
     state = blocked_state()
     state.update(status='running', runId=str(uuid.uuid4()), startedAt=now(), updatedAt=now(), error=None)
     state['environment'] = {'provider': executor.provider, 'verified': executor.provider != 'local-node' and getattr(executor, 'verified', False) is True}
-    state['memory'] = {'provider': store.provider, 'status': 'pending', 'lesson': None, 'sourceRunId': None}
+    state['memory'] = {'provider': memory.provider if memory is not None else store.provider, 'status': 'pending', 'lesson': None, 'sourceRunId': None}
     for stage in state['stages']:
         stage['status'] = 'pending'
     active = state['stages'][0]
@@ -280,7 +373,7 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
             for field in ('model', 'requestId'):
                 if not isinstance(response.get(field), str) or not re.fullmatch(r'[A-Za-z0-9._:/-]{1,256}', response[field]):
                     raise DemoError('invalid_model_metadata')
-            for name in ('AI_GATEWAY_API_KEY', 'SUPABASE_SECRET_KEY'):
+            for name in ('AI_GATEWAY_API_KEY', 'SUPABASE_SECRET_KEY', 'HONCHO_API_KEY'):
                 secret = config.get(name)
                 if secret and secret in json.dumps(response):
                     raise DemoError('unsafe_model_response')
@@ -317,15 +410,30 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
             raise DemoError('baseline_failed_no_experience_recorded')
         experience = {'id': str(uuid.uuid4()), 'syntheticData': True, 'sourceRunId': state['runId'],
                       'candidate': learned['text'], 'model': learned['model'], 'requestId': learned['requestId'],
-                      'verification': baseline, 'lesson': 'v1: authenticated active actor in the document tenant.'}
+                      'verification': baseline, 'lesson': 'Actual model ' + learned['model'] + ' candidate SHA-256 '
+                      + baseline['receipt']['artifactHash'] + ' passed '
+                      + str(len(baseline['checks'])) + '/' + str(len(baseline['checks']))
+                      + ' frozen v1 checks: authenticated active actor in the document tenant. Recheck membership-bound v2 before reuse.'}
         if store.write_verified('experience', experience, budget.remaining(10)) != experience:
             raise DemoError('durable_readback_mismatch')
+        memory_handle = None
+        if memory is not None:
+            memory_handle = memory.ingest_verified(experience, budget.remaining(20))
+            event(active, 'info', 'Honcho synthetic experience ingested and read back; Supabase artifact remains authoritative.')
         state['memory'].update(status='stored', lesson=experience['lesson'], sourceRunId=state['runId'])
         publish()
         # Independent durable read; do not replay the in-memory learned candidate.
         recalled = store.read('experience', experience['id'], budget.remaining(10))
         if recalled != experience:
             raise DemoError('durable_recall_mismatch')
+        if memory is not None:
+            retrieved = memory.retrieve(memory_handle, recalled, budget.remaining(10))
+            if (retrieved.get('candidateId') != recalled['id']
+                    or retrieved.get('artifactHash') != recalled['verification']['receipt']['artifactHash']
+                    or not isinstance(retrieved.get('lesson'), str) or not 1 <= len(retrieved['lesson']) <= 2048):
+                raise DemoError('invalid_honcho_recall')
+            state['memory']['lesson'] = retrieved['lesson']
+            event(active, 'info', 'Retrieved actual Honcho message lesson bound to the Supabase candidate hash.')
         state['memory']['status'] = 'retrieved'
         active = state['stages'][1]
         remembered = {'text': recalled['candidate'], 'model': recalled['model'], 'requestId': recalled['requestId']}
@@ -336,7 +444,8 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
         requirements = (ROOT / 'fixtures/access-control/requirements-v2.json').read_text()
         failed = [check for check in replay['checks'] if not check['passed']]
         repaired = generate('Synthetic requirements v2:\n' + requirements + '\nRemembered candidate unchanged:\n'
-                            + recalled['candidate'] + '\nFailed checks (independent observations):\n' + json.dumps(failed))
+                            + recalled['candidate'] + '\nRetrieved lesson from ' + state['memory']['provider'] + ':\n'
+                            + state['memory']['lesson'] + '\nFailed checks (independent observations):\n' + json.dumps(failed))
         repair = evaluate(active, repaired, 'v2', recalled['sourceRunId'])
         if repair['verdict'] != 'works':
             raise DemoError('repair_failed')
@@ -370,7 +479,7 @@ def main():
     signal.signal(signal.SIGALRM, timeout)
     signal.setitimer(signal.ITIMER_REAL, 120)
     try:
-        state = run_demo(args.output_dir)
+        state = run_demo(args.output_dir, require_honcho=True)
         print(json.dumps({'status': state['status'], 'runId': state['runId'], 'error': state['error'],
                           'statePath': str(Path(args.output_dir).resolve() / 'state.json')}))
         return 0 if state['status'] == 'complete' else 2

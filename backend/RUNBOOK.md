@@ -8,7 +8,10 @@ through the CLI**. Public UI remains a read-only synthetic evidence ledger.
 
 Parent must first review/apply `supabase/migrations/20261004000100_recheck_demo.sql`
 and inject `AI_GATEWAY_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SECRET_KEY` into the
-server process environment. No credentials files are loaded. New Supabase
+server process environment, plus `HONCHO_API_KEY` for the selected CLI run. The
+CLI requires Honcho now (`require_honcho=True`); the lower-level trusted
+`run_demo` seam retains explicit Supabase-only testing/operation. No credential
+files are loaded. New Supabase
 `sb_secret_*` keys use the `apikey` header, not a bearer JWT. Never inject this key
 into frontend assets, model messages, evaluator children, or user authentication.
 
@@ -60,7 +63,19 @@ execution, not merely relabel local results. Store supplies `write_verified(kind
 record, timeout)` and `read(kind, id, timeout)` with exact readbacks. The default
 executor is **local-node**, `environment.verified:false`; subprocess isolation is
 not an OS sandbox and never claims Supabase Compute. Memory provider is actual
-**Supabase**; optional **Honcho integration is unavailable**, not simulated.
+**Supabase** when Honcho is absent. With `HONCHO_API_KEY` supplied, the real v3
+HTTP adapter uses only `recheck-hackathon-20261003`, never creates/reconfigures a
+workspace, and reports memory provider **Honcho**. After actual passing v1 checks
+and verified Supabase insertion, it creates per-run synthetic peer/session,
+independently reads each back, ingests only candidate ID/hash/source ID and lesson,
+then GETs the exact message for write verification. A fresh session semantic search POST (v3 returns a list of message objects) retrieves the
+actual message lesson and binds it to the independently retrieved Supabase artifact;
+the repair model receives that retrieved lesson after unchanged v2 failure.
+Reasoning, summary, dream and peer observation are explicitly disabled for these
+sessions: this proves message retrieval, not Honcho reasoning. No SDK installation.
+Honcho errors or absent credentials block the selected CLI run honestly. Only the
+explicit lower-level Supabase-only seam can operate without it. All calls share the 120-second budget. Parent owns
+live credential injection and provider verification.
 
 Tests inject clearly labelled model/store protocol fixtures but execute the actual
 Node evaluator. This proves orchestration/evaluation, not live Gateway/Supabase
