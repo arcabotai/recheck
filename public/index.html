@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Recheck: an evidence ledger for testing yesterday's model-generated fix against today's requirements.">
+  <title>Recheck — Don't trust yesterday's fix.</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <!-- Product brief: hackathon judges inspect a read-only synthetic access-control
+       experiment, not a model chat. Flow: connection → Learn → Recheck → Adapt →
+       inspect independent checks, patch and receipts. Loading, idle, running,
+       complete, blocked, invalid API and offline preserve distinct states.
+       Motif: laboratory notebook / evidence ledger. Warm paper, dark ink, teal
+       passes, red failures. Native anchors/disclosures; no execution controls. -->
+  <a class="skip-link" href="#main">Skip to the evidence</a>
+  <header class="masthead page-width">
+    <a class="wordmark" href="#main" aria-label="Recheck, evidence ledger"><span class="ledger-mark" aria-hidden="true"><i></i><i></i><i></i></span>recheck<span class="wordmark-period">.</span></a>
+    <div class="masthead-meta"><span class="specimen-label">Synthetic scenario</span><span class="read-only">Read-only presenter</span></div>
+  </header>
+
+  <main id="main" class="page-width" tabindex="-1">
+    <section class="intro" aria-labelledby="headline">
+      <div>
+        <p class="eyebrow"><span class="small-rule" aria-hidden="true"></span> A working memory experiment</p>
+        <h1 id="headline">Don't trust<br>yesterday's fix.</h1>
+      </div>
+      <div class="intro-note">
+        <p class="intro-thesis">Test it against<br>today's project.</p>
+        <p>A model learns a repair. Another recalls it. The requirements change. Only independent checks decide what still holds.</p>
+        <p class="scenario-note">Specimen: multi-tenant access control.<br><span id="scenario-limits">Scenario limits awaiting backend confirmation.</span></p>
+      </div>
+    </section>
+
+    <section class="run-sheet" aria-label="Run and connection status">
+      <div class="run-observation"><p class="eyebrow">Current observation</p><h2 id="run-observation">No evidence received yet.</h2><p id="run-detail">This page cannot start a run or spend model credits.</p></div>
+      <div class="run-metadata"><div class="connection" id="connection" data-status="loading"><span class="status-dot" aria-hidden="true"></span><span id="connection-label" role="status" aria-live="polite">Connecting · not yet live</span></div><dl><div><dt>Run</dt><dd id="run-id">Not reported</dd></div><div><dt>Updated</dt><dd id="updated-at">No snapshot</dd></div></dl><p class="poll-note">GET /api/state · every 1.5s</p></div>
+    </section>
+    <p id="connection-detail" class="connection-detail" role="status" aria-live="polite">Waiting for the first state response. No results are assumed.</p>
+    <p id="backend-error" class="backend-error" role="alert" hidden></p>
+
+    <nav class="sequence" aria-label="Experiment sequence">
+      <a href="#stage-learn" class="sequence-step" id="sequence-learn"><span class="sequence-top"><span class="step-index">01</span><span id="sequence-learn-status" class="badge">Awaiting state</span></span><span class="step-name">Learn<span aria-hidden="true">↗</span></span><span class="step-purpose">Establish the original repair</span><span id="sequence-learn-model" class="sequence-model">Model not yet reported</span></a>
+      <a href="#stage-replay" class="sequence-step" id="sequence-replay"><span class="sequence-top"><span class="step-index">02</span><span id="sequence-replay-status" class="badge">Awaiting state</span></span><span class="step-name">Recheck<span aria-hidden="true">↗</span></span><span class="step-purpose">Challenge the remembered fix</span><span id="sequence-replay-model" class="sequence-model">Model not yet reported</span></a>
+      <a href="#stage-repair" class="sequence-step" id="sequence-repair"><span class="sequence-top"><span class="step-index">03</span><span id="sequence-repair-status" class="badge">Awaiting state</span></span><span class="step-name">Adapt<span aria-hidden="true">↗</span></span><span class="step-purpose">Revise, then verify again</span><span id="sequence-repair-model" class="sequence-model">Model not yet reported</span></a>
+    </nav>
+
+    <section class="memory-note" aria-labelledby="memory-title">
+      <div class="memory-heading"><p class="eyebrow">Retrieved experience</p><h2 id="memory-title">A lesson is<br>a hypothesis.</h2><p><span id="memory-provider">Memory provider not reported</span> / <span id="memory-status">Awaiting state</span></p></div>
+      <div class="memory-content"><blockquote id="memory-lesson">No lesson has been received. Recalled advice is not proof that it still works.</blockquote><p class="memory-source">Source run <span id="memory-source">Not reported</span></p></div>
+    </section>
+
+    <section class="evidence-section" aria-labelledby="evidence-title">
+      <div class="section-heading"><div><p class="eyebrow">The evidence ledger</p><h2 id="evidence-title">Show the work.</h2></div><p>Expected vs. actual.<br>Execution results, not model self-assessment.</p></div>
+      <div id="stage-ledger"></div>
+      <noscript><p class="backend-error">JavaScript is required to fetch the evidence. No results can be displayed without it.</p></noscript>
+    </section>
+
+    <section class="provenance" aria-labelledby="provenance-title">
+      <div class="provenance-heading"><p class="eyebrow">Execution provenance</p><h2 id="provenance-title">Where did it run?</h2></div>
+      <div class="compute-evidence"><div class="compute-heading"><h3 id="compute-provider">Execution provider not reported</h3><span id="compute-status" class="badge status-blocked">Unverified</span></div><p id="compute-detail">The execution environment has not been verified. A provider name alone is not an execution receipt.</p></div>
+    </section>
+
+    <section class="trail-section" aria-labelledby="trail-title">
+      <details class="trail-disclosure" open><summary><span id="trail-title">Event trail</span><span id="event-count" class="trail-count">No events received</span></summary><ol id="event-trail" class="event-trail"><li class="empty-evidence">No execution events have been received.</li></ol></details>
+    </section>
+  </main>
+
+  <footer class="page-width"><span>recheck. <span class="footer-divider">/</span> Memory proposes. Evidence decides.</span><span id="footer-mode">Synthetic scenario · read-only interface</span></footer>
+</body>
+</html>

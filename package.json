@@ -1,0 +1,8 @@
+{
+  "name": "recheck-hackathon",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent-facing stale-solution verification demo, work in progress",
+  "engines": {"node": ">=22"},
+  "scripts": {"test:ui": "node --max-old-space-size=128 public/ui.test.cjs"}
+}
