@@ -35,8 +35,12 @@ EXPR: {"op":"all"|"any","args":[EXPR,...]} (1-16 children),
 OPERAND: exactly {"field":"FIELD"} or {"literal":boolean|null|string <=256 chars}.
 Allowed FIELD: actor.id, actor.tenantId, actor.authenticated, actor.active,
 document.id, document.tenantId, membership.actorId, membership.tenantId, membership.active.
-truthy means exactly boolean true. eq is strict equality; unavailable/empty/wrongly typed
-fields never equal anything. Missing required predicates must deny access.
+truthy means exactly boolean true, NOT JavaScript truthiness. NEVER apply truthy to
+ID or tenantId string fields: every string would fail that operation. For present,
+nonempty ID/tenantId comparisons use eq between fields; eq already denies unavailable,
+empty or wrongly typed fields without an additional existence check.
+eq is strict equality; unavailable/empty/wrongly typed fields never equal anything.
+Missing required predicates must deny access.
 Depth <=16, total expression+operand nodes <=128, UTF-8 artifact <=16384 bytes.
 The evaluator injects inputs. You cannot supply, select or modify checks.'''
 
