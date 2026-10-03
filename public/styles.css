@@ -14,3 +14,4 @@
 .live-heading{display:flex;align-items:baseline;justify-content:space-between;gap:20px;border-top:1px solid var(--ink);padding:26px 0 14px;scroll-margin-top:20px}.live-heading h2{font:normal 38px/1.1 var(--serif);letter-spacing:-.035em;margin:0}.live-heading p{margin:0;font-size:13px;color:var(--muted);text-align:right;max-width:520px}
 @media(max-width:1000px){.calls{grid-template-columns:1fr}.agents-heading{grid-template-columns:1fr}.agents-heading h2{grid-row:auto}}
 @media(max-width:680px){.intro-note{display:block!important}.intro-thesis{font-size:22px!important;margin:0 0 14px!important}.intro-actions .action{flex:1;justify-content:center}.agents-heading h2,.live-heading h2{font-size:31px}.live-heading{display:block}.live-heading p{text-align:left;margin-top:6px;font-size:12px}.call{padding:15px}.call h3{font-size:23px}}
+.run-sheet .run-kind.is-recorded{color:#efb969;border:1px solid #efb969;padding:3px 8px;display:inline-flex;font-weight:600}

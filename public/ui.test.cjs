@@ -250,3 +250,45 @@ test('auth error returned in the redirect hash is surfaced, not treated as signe
 });
 
 module.exports = { fixture, loadApp };
+
+test('recorded snapshot fallback is labelled not live, only used before API evidence, and never accepted as verified', async () => {
+  const app = loadApp(), document = testDocument();
+  const presenter = app.mountPresenter(document);
+  const recorded = fixture();
+  recorded.status = 'complete'; recorded.runId = 'recorded-test-run'; recorded.updatedAt = '2026-10-03T00:00:00Z';
+  recorded.environment = { provider: 'local-node', verified: false };
+  const calls = [], intervals = [];
+  let api = new Error('HTTP 404'), file = { ok: true, json: async () => recorded };
+  const poller = app.createPoller({
+    fetch: async url => { calls.push(url); const r = url === '/api/state' ? api : file; if (r instanceof Error) throw r; return r; },
+    fallbackUrl: '/recorded-state.json', onState: presenter.onState, onConnection: presenter.onConnection,
+    setInterval: (fn, ms) => { intervals.push(fn); return 1; }, clearInterval: () => {},
+    setTimeout: () => 2, clearTimeout: () => {}
+  });
+  const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+  poller.start(); await settle();
+  assert.deepEqual(calls, ['/api/state', '/recorded-state.json']);
+  assert.equal(document.getElementById('run-id').textContent, 'recorded-test-run');
+  assert.match(document.getElementById('connection-label').textContent, /recorded snapshot · not live/i);
+  assert.doesNotMatch(document.getElementById('connection-label').textContent, /^live|connected/i);
+  assert.match(document.getElementById('run-kind').textContent, /recorded execution evidence · not live/i);
+  assert.match(document.getElementById('connection-detail').textContent, /local-node, unverified; nothing new is running/);
+  intervals[0](); await settle();
+  assert.equal(calls.filter(url => url === '/recorded-state.json').length, 1, 'the static file is fetched once');
+  api = { ok: true, json: async () => fixture() }; intervals[0](); await settle();
+  assert.match(document.getElementById('connection-label').textContent, /^Connected/);
+  assert.doesNotMatch(document.getElementById('run-kind').textContent, /recorded/i, 'API evidence replaces the recording');
+  poller.stop();
+
+  for (const bad of [{ ...recorded, environment: { provider: 'Supabase Compute', verified: true } }, { ...recorded, status: 'running' }, { ...recorded, runId: null }]) {
+    assert.throws(() => app.validateRecorded(bad), /recorded snapshot/i);
+  }
+});
+
+test('published recorded snapshot is byte-identical to the backend recording and passes the strict recorded check', () => {
+  const published = fs.readFileSync(path.join(__dirname, 'recorded-state.json'));
+  const source = path.join(__dirname, '..', 'demo', 'recorded-local-state.json');
+  if (fs.existsSync(source)) assert.ok(published.equals(fs.readFileSync(source)), 'public/recorded-state.json drifted from demo/recorded-local-state.json');
+  const state = loadApp().validateRecorded(JSON.parse(published));
+  assert.deepEqual(state.stages.map(stage => stage.status), ['pass', 'fail', 'pass']);
+});

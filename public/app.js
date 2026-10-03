@@ -33,8 +33,17 @@
     return value;
   }
 
+  // A static file is never live proof: it must be a finished run with a run id and an unverified environment.
+  function validateRecorded(value) {
+    const state = validateState(value);
+    if (state.status !== 'complete' || typeof state.runId !== 'string' || !state.runId || state.environment.verified !== false) {
+      throw new Error('Recorded snapshot must be a completed run in an unverified environment.');
+    }
+    return state;
+  }
+
   function createPoller(options) {
-    let interval = null, inFlight = false, controller = null, stopped = true;
+    let interval = null, inFlight = false, controller = null, stopped = true, hadApiState = false, fallbackTried = false;
     const later = options.setTimeout || setTimeout;
     const cancelLater = options.clearTimeout || clearTimeout;
     const repeat = options.setInterval || setInterval;
@@ -52,10 +61,25 @@
         if (!response.ok) throw new Error('State endpoint returned HTTP ' + response.status + '.');
         const state = validateState(await response.json());
         if (stopped) return;
-        options.onState(state);
+        hadApiState = true;
+        options.onState(state, { source: 'api' });
         options.onConnection({ status: 'online', message: '' });
       } catch (error) {
-        if (!stopped) options.onConnection({ status: 'unreachable', message: error.name === 'AbortError' ? 'State request timed out after 8 seconds.' : String(error.message || error) });
+        if (stopped) return;
+        let message = error.name === 'AbortError' ? 'State request timed out after 8 seconds.' : String(error.message || error);
+        // Only before any API evidence: show the published recorded run, labelled as such, instead of an empty page.
+        if (options.fallbackUrl && !hadApiState && !fallbackTried) {
+          fallbackTried = true;
+          try {
+            const response = await options.fetch(options.fallbackUrl, { method: 'GET', cache: 'no-store', headers: { Accept: 'application/json' }, signal: controller.signal });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const recorded = validateRecorded(await response.json());
+            if (!stopped && !hadApiState) options.onState(recorded, { source: 'recorded' });
+          } catch (fallbackError) {
+            message += ' Recorded snapshot rejected: ' + String(fallbackError.message || fallbackError);
+          }
+        }
+        if (!stopped) options.onConnection({ status: 'unreachable', message });
       } finally {
         cancelLater(timeout);
         inFlight = false;
@@ -133,7 +157,7 @@
     const setText = (id, text) => { const node = byId(id); if (node && node.textContent !== text) node.textContent = text; };
     const badge = (text, statusClass) => el('span', 'badge' + (statusClass ? ' ' + statusClass : ''), text);
 
-    let lastState = null, lastSerialized = null, lastReceivedAt = null, connection = { status: 'loading', message: '' };
+    let lastState = null, lastSerialized = null, lastReceivedAt = null, source = null, connection = { status: 'loading', message: '' };
 
     function renderRunSheet(state) {
       const titles = {
@@ -143,6 +167,14 @@
         blocked: 'The run is blocked.'
       };
       setText('run-observation', titles[state.status]);
+      const kind = byId('run-kind');
+      if (kind) {
+        const [text, cls] = source === 'recorded' ? ['Recorded execution evidence · not live', 'is-recorded']
+          : state.environment.verified ? ['Current observation · verified environment', '']
+            : ['Current observation · environment unverified', ''];
+        setText('run-kind', text);
+        kind.className = 'eyebrow run-kind' + (cls ? ' ' + cls : '');
+      }
       const failed = state.stages.filter(stage => stage.status === 'fail').map(stage => STAGE_NAMES[stage.id]);
       let detail = 'This page cannot start a run or spend model credits.';
       if (state.status === 'complete' && failed.length) detail = 'Completed with failing stage(s): ' + failed.join(', ') + '. Completion does not mean every check passed.';
@@ -305,8 +337,15 @@
       if (node) node.setAttribute('data-status', connection.status);
       const detail = byId('connection-detail');
       let label, text, cls = 'connection-detail';
-      if (connection.status === 'online') {
-        label = 'Live · polling every 1.5s';
+      if (source === 'recorded' && connection.status !== 'online') {
+        label = 'Recorded snapshot · not live';
+        cls += ' is-unreachable';
+        text = 'The state endpoint is not reachable from this page, so no live run can be shown. Showing the published recorded run '
+          + plain(lastState.runId, '') + ', captured ' + (formatTime(lastState.updatedAt) || 'at an unreported time')
+          + '. It executed on ' + plain(lastState.environment.provider, 'an unreported provider')
+          + ', unverified; nothing new is running.' + (connection.message ? ' Reason: ' + connection.message : '');
+      } else if (connection.status === 'online') {
+        label = 'Connected · polling every 1.5s';
         text = 'Connected. Showing the latest state received at ' + (formatTime(lastReceivedAt) || 'unknown time') + '.';
       } else if (connection.status === 'unreachable') {
         label = 'Unreachable · not live';
@@ -323,7 +362,8 @@
       if (detail) { detail.className = cls; if (detail.textContent !== text) detail.textContent = text; }
     }
 
-    function onState(state) {
+    function onState(state, meta) {
+      source = meta && meta.source === 'recorded' ? 'recorded' : 'api';
       lastState = state;
       lastReceivedAt = now();
       const serialized = JSON.stringify(state);
@@ -382,14 +422,14 @@
     }
   }
 
-  const api = { validateState, createPoller, mountPresenter, checkVerdict, literal, renderHealth, checkHealth, healthChip };
+  const api = { validateState, validateRecorded, createPoller, mountPresenter, checkVerdict, literal, renderHealth, checkHealth, healthChip };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 
   if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof module === 'undefined') {
     window.Recheck = api;
     const config = window.RECHECK_CONFIG || {};
     const presenter = mountPresenter(document);
-    const poller = createPoller({ fetch: window.fetch.bind(window), apiBase: config.apiBase || '', onState: presenter.onState, onConnection: presenter.onConnection });
+    const poller = createPoller({ fetch: window.fetch.bind(window), apiBase: config.apiBase || '', fallbackUrl: '/recorded-state.json', onState: presenter.onState, onConnection: presenter.onConnection });
     poller.start();
     const refreshHealth = () => checkHealth(window.fetch.bind(window), config.apiBase || '').then(result => renderHealth(document, result));
     refreshHealth();
