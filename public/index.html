@@ -39,18 +39,64 @@
   <main id="main" class="page-width" tabindex="-1">
     <section class="intro" aria-labelledby="headline">
       <div>
-        <p class="eyebrow"><span class="small-rule" aria-hidden="true"></span> A working memory experiment</p>
+        <p class="eyebrow"><span class="small-rule" aria-hidden="true"></span> Verified memory for coding agents</p>
         <h1 id="headline">Don't trust<br>yesterday's fix.</h1>
       </div>
       <div class="intro-note">
-        <p class="intro-thesis">Test it against<br>today's project.</p>
-        <p>A model learns a repair. Another recalls it. The requirements change. Only independent checks decide what still holds.</p>
-        <p class="scenario-note">Specimen: multi-tenant access control.<br><span id="scenario-limits">Scenario limits awaiting backend confirmation.</span></p>
+        <p class="intro-thesis">Recheck re-runs a remembered fix against today's tests before an agent reuses it.</p>
+        <ul class="verdicts" aria-label="Possible verdicts">
+          <li class="verdict verdict-works">works</li>
+          <li class="verdict verdict-fails">fails</li>
+          <li class="verdict verdict-cannot">cannot_verify</li>
+        </ul>
+        <p class="intro-actions"><a class="action primary" href="#agents">Use it from an agent</a><a class="action" href="#live">See the run</a></p>
+        <p class="scenario-note"><span id="scenario-limits">Synthetic scenario · limits awaiting backend.</span></p>
       </div>
     </section>
 
+    <section class="agents" id="agents" aria-labelledby="agents-title">
+      <div class="agents-heading">
+        <h2 id="agents-title">Three calls.</h2>
+        <p>Every call: <code>Authorization: Bearer &lt;Supabase access token&gt;</code>. Execution decides; the model never does.</p>
+        <p class="api-status" id="api-status" role="status">Backend status: checking <code>/api/health</code>…</p>
+      </div>
+      <ol class="calls">
+        <li class="call">
+          <div class="call-top"><span class="call-index">1</span><h3>Recall</h3><span class="badge" id="call-status-memory">checking</span></div>
+          <p class="call-route"><b>POST</b> /api/v1/experiences/search</p>
+          <pre id="snippet-recall"><code>{"workspaceId": "&lt;uuid&gt;",
+ "query": "tenant read access fix",
+ "targetFingerprint": "&lt;sha256&gt;",
+ "limit": 5}</code></pre>
+          <p class="call-returns">→ past fixes + provenance. <em>Not proof.</em></p>
+          <button type="button" class="copy" data-copy="snippet-recall">Copy</button>
+        </li>
+        <li class="call">
+          <div class="call-top"><span class="call-index">2</span><h3>Recheck</h3><span class="badge" id="call-status-executor">checking</span></div>
+          <p class="call-route"><b>POST</b> /api/v1/verifications</p>
+          <pre id="snippet-verify"><code>{"workspaceId": "&lt;uuid&gt;",
+ "experienceId": "&lt;uuid&gt;",
+ "targetEnvironment": {"fingerprint": "&lt;sha256&gt;"},
+ "testSuiteId": "&lt;uuid&gt;"}</code></pre>
+          <p class="call-returns">→ <b>works</b> · <b>fails</b> · <b>cannot_verify</b> + checks + receipt. Poll <code>GET /api/v1/verifications/{id}</code>.</p>
+          <button type="button" class="copy" data-copy="snippet-verify">Copy</button>
+        </li>
+        <li class="call">
+          <div class="call-top"><span class="call-index">3</span><h3>Record</h3><span class="badge" id="call-status-repository">checking</span></div>
+          <p class="call-route"><b>POST</b> /api/v1/experiences</p>
+          <pre id="snippet-record"><code>{"workspaceId": "&lt;uuid&gt;",
+ "verificationId": "&lt;uuid&gt;",
+ "title": "Bind membership to actor",
+ "summary": "v2 fix, re-verified"}</code></pre>
+          <p class="call-returns">→ saved only with a <b>passing</b> verification.</p>
+          <button type="button" class="copy" data-copy="snippet-record">Copy</button>
+        </li>
+      </ol>
+    </section>
+
+    <div class="live-heading" id="live"><h2>The run</h2><p>Agent A learns a fix → requirements change → Agent B recalls it, Recheck catches it, B adapts.</p></div>
     <section class="run-sheet" aria-label="Run and connection status">
-      <div class="run-observation"><p class="eyebrow">Current observation</p><h2 id="run-observation">No evidence received yet.</h2><p id="run-detail">This page cannot start a run or spend model credits.</p></div>
+      <div class="run-observation"><p class="eyebrow run-kind" id="run-kind">Current observation</p><h2 id="run-observation">No evidence received yet.</h2><p id="run-detail">This page cannot start a run or spend model credits.</p></div>
       <div class="run-metadata"><div class="connection" id="connection" data-status="loading"><span class="status-dot" aria-hidden="true"></span><span id="connection-label" role="status" aria-live="polite">Connecting · not yet live</span></div><dl><div><dt>Run</dt><dd id="run-id">Not reported</dd></div><div><dt>Updated</dt><dd id="updated-at">No snapshot</dd></div></dl><p class="poll-note">GET /api/state · every 1.5s</p></div>
     </section>
     <p id="connection-detail" class="connection-detail" role="status" aria-live="polite">Waiting for the first state response. No results are assumed.</p>
@@ -63,12 +109,12 @@
     </nav>
 
     <section class="memory-note" aria-labelledby="memory-title">
-      <div class="memory-heading"><p class="eyebrow">Retrieved experience</p><h2 id="memory-title">A lesson is <br>a hypothesis.</h2><p><span id="memory-provider">Memory provider not reported</span> / <span id="memory-status">Awaiting state</span></p></div>
-      <div class="memory-content"><blockquote id="memory-lesson">No lesson has been received. Recalled advice is not proof that it still works.</blockquote><p class="memory-source">Source run <span id="memory-source">Not reported</span></p></div>
+      <div class="memory-heading"><p class="eyebrow">Retrieved experience</p><h2 id="memory-title">Recalled lesson</h2><p><span id="memory-provider">Memory provider not reported</span> / <span id="memory-status">Awaiting state</span></p></div>
+      <div class="memory-content"><blockquote id="memory-lesson">No lesson received yet.</blockquote><p class="memory-source">Source run <span id="memory-source">Not reported</span></p></div>
     </section>
 
     <section class="evidence-section" aria-labelledby="evidence-title">
-      <div class="section-heading"><div><p class="eyebrow">The evidence ledger</p><h2 id="evidence-title">Show the work.</h2></div><p>Expected vs. actual.<br>Execution results, not model self-assessment.</p></div>
+      <div class="section-heading"><div><p class="eyebrow">Evidence</p><h2 id="evidence-title">Expected vs. actual.</h2></div><p>Execution results,<br>not model opinions.</p></div>
       <div id="stage-ledger"></div>
       <noscript><p class="backend-error">JavaScript is required to fetch the evidence. No results can be displayed without it.</p></noscript>
     </section>

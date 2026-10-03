@@ -165,6 +165,23 @@ test('presenter source contains no HTML sinks and no write endpoints', () => {
   assert.doesNotMatch(source, /\/api\/demo|method:\s*'POST'.*\/api\//);
 });
 
+test('agent call chips follow /api/health and never invent a live call', () => {
+  const app = loadApp(), document = testDocument();
+  app.renderHealth(document, { error: 'HTTP 404' });
+  assert.match(document.getElementById('api-status').textContent, /not reachable.*HTTP 404/);
+  assert.equal(document.getElementById('call-status-executor').textContent, 'offline');
+  app.renderHealth(document, { body: { ready: false, integrations: { auth: 'configured_unproven', executor: 'unbound', memory: 'unbound', repository: 'configured_unproven' } } });
+  assert.match(document.getElementById('api-status').textContent, /ready: no/);
+  assert.equal(document.getElementById('call-status-executor').textContent, 'unbound');
+  assert.equal(document.getElementById('call-status-repository').textContent, 'configured unproven');
+  assert.match(document.getElementById('call-status-memory').className, /status-blocked/);
+  app.renderHealth(document, { body: { ready: true, integrations: { executor: 'live' } } });
+  assert.match(document.getElementById('call-status-executor').className, /status-pass/);
+  assert.equal(document.getElementById('call-status-memory').textContent, 'not reported');
+  app.renderHealth(document, { body: [] });
+  assert.equal(document.getElementById('call-status-memory').textContent, 'offline');
+});
+
 // Supabase Auth session layer. All tokens and responses below are synthetic test doubles.
 function loadAuth() {
   const context = vm.createContext({ module: { exports: {} }, console, URLSearchParams, Date, JSON });
@@ -179,6 +196,7 @@ test('auth stays disabled without verified public config and rejects service-rol
   assert.equal(auth.configured({}), false);
   assert.equal(auth.configured({ supabaseUrl: 'http://insecure.example', supabaseAnonKey: testConfig.supabaseAnonKey }), false);
   assert.equal(auth.configured({ supabaseUrl: testConfig.supabaseUrl, supabaseAnonKey: 'service_role-key-should-never-ship-xx' }), false);
+  assert.equal(auth.configured({ supabaseUrl: testConfig.supabaseUrl, supabaseAnonKey: 'sb_secret_should_never_ship_in_browser_0' }), false);
   assert.equal(auth.configured(testConfig), true);
   const calls = [];
   const client = auth.createAuth({ config: {}, fetch: async (...a) => { calls.push(a); }, storage: memoryStorage() });
@@ -232,3 +250,45 @@ test('auth error returned in the redirect hash is surfaced, not treated as signe
 });
 
 module.exports = { fixture, loadApp };
+
+test('recorded snapshot fallback is labelled not live, only used before API evidence, and never accepted as verified', async () => {
+  const app = loadApp(), document = testDocument();
+  const presenter = app.mountPresenter(document);
+  const recorded = fixture();
+  recorded.status = 'complete'; recorded.runId = 'recorded-test-run'; recorded.updatedAt = '2026-10-03T00:00:00Z';
+  recorded.environment = { provider: 'local-node', verified: false };
+  const calls = [], intervals = [];
+  let api = new Error('HTTP 404'), file = { ok: true, json: async () => recorded };
+  const poller = app.createPoller({
+    fetch: async url => { calls.push(url); const r = url === '/api/state' ? api : file; if (r instanceof Error) throw r; return r; },
+    fallbackUrl: '/recorded-state.json', onState: presenter.onState, onConnection: presenter.onConnection,
+    setInterval: (fn, ms) => { intervals.push(fn); return 1; }, clearInterval: () => {},
+    setTimeout: () => 2, clearTimeout: () => {}
+  });
+  const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+  poller.start(); await settle();
+  assert.deepEqual(calls, ['/api/state', '/recorded-state.json']);
+  assert.equal(document.getElementById('run-id').textContent, 'recorded-test-run');
+  assert.match(document.getElementById('connection-label').textContent, /recorded snapshot · not live/i);
+  assert.doesNotMatch(document.getElementById('connection-label').textContent, /^live|connected/i);
+  assert.match(document.getElementById('run-kind').textContent, /recorded execution evidence · not live/i);
+  assert.match(document.getElementById('connection-detail').textContent, /local-node, unverified; nothing new is running/);
+  intervals[0](); await settle();
+  assert.equal(calls.filter(url => url === '/recorded-state.json').length, 1, 'the static file is fetched once');
+  api = { ok: true, json: async () => fixture() }; intervals[0](); await settle();
+  assert.match(document.getElementById('connection-label').textContent, /^Connected/);
+  assert.doesNotMatch(document.getElementById('run-kind').textContent, /recorded/i, 'API evidence replaces the recording');
+  poller.stop();
+
+  for (const bad of [{ ...recorded, environment: { provider: 'Supabase Compute', verified: true } }, { ...recorded, status: 'running' }, { ...recorded, runId: null }]) {
+    assert.throws(() => app.validateRecorded(bad), /recorded snapshot/i);
+  }
+});
+
+test('published recorded snapshot is byte-identical to the backend recording and passes the strict recorded check', () => {
+  const published = fs.readFileSync(path.join(__dirname, 'recorded-state.json'));
+  const source = path.join(__dirname, '..', 'demo', 'recorded-local-state.json');
+  if (fs.existsSync(source)) assert.ok(published.equals(fs.readFileSync(source)), 'public/recorded-state.json drifted from demo/recorded-local-state.json');
+  const state = loadApp().validateRecorded(JSON.parse(published));
+  assert.deepEqual(state.stages.map(stage => stage.status), ['pass', 'fail', 'pass']);
+});
