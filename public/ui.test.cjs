@@ -165,6 +165,23 @@ test('presenter source contains no HTML sinks and no write endpoints', () => {
   assert.doesNotMatch(source, /\/api\/demo|method:\s*'POST'.*\/api\//);
 });
 
+test('agent call chips follow /api/health and never invent a live call', () => {
+  const app = loadApp(), document = testDocument();
+  app.renderHealth(document, { error: 'HTTP 404' });
+  assert.match(document.getElementById('api-status').textContent, /not reachable.*HTTP 404/);
+  assert.equal(document.getElementById('call-status-executor').textContent, 'offline');
+  app.renderHealth(document, { body: { ready: false, integrations: { auth: 'configured_unproven', executor: 'unbound', memory: 'unbound', repository: 'configured_unproven' } } });
+  assert.match(document.getElementById('api-status').textContent, /ready: no/);
+  assert.equal(document.getElementById('call-status-executor').textContent, 'unbound');
+  assert.equal(document.getElementById('call-status-repository').textContent, 'configured unproven');
+  assert.match(document.getElementById('call-status-memory').className, /status-blocked/);
+  app.renderHealth(document, { body: { ready: true, integrations: { executor: 'live' } } });
+  assert.match(document.getElementById('call-status-executor').className, /status-pass/);
+  assert.equal(document.getElementById('call-status-memory').textContent, 'not reported');
+  app.renderHealth(document, { body: [] });
+  assert.equal(document.getElementById('call-status-memory').textContent, 'offline');
+});
+
 // Supabase Auth session layer. All tokens and responses below are synthetic test doubles.
 function loadAuth() {
   const context = vm.createContext({ module: { exports: {} }, console, URLSearchParams, Date, JSON });
@@ -179,6 +196,7 @@ test('auth stays disabled without verified public config and rejects service-rol
   assert.equal(auth.configured({}), false);
   assert.equal(auth.configured({ supabaseUrl: 'http://insecure.example', supabaseAnonKey: testConfig.supabaseAnonKey }), false);
   assert.equal(auth.configured({ supabaseUrl: testConfig.supabaseUrl, supabaseAnonKey: 'service_role-key-should-never-ship-xx' }), false);
+  assert.equal(auth.configured({ supabaseUrl: testConfig.supabaseUrl, supabaseAnonKey: 'sb_secret_should_never_ship_in_browser_0' }), false);
   assert.equal(auth.configured(testConfig), true);
   const calls = [];
   const client = auth.createAuth({ config: {}, fetch: async (...a) => { calls.push(a); }, storage: memoryStorage() });

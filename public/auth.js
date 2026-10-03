@@ -9,7 +9,7 @@
   function configured(config) {
     return Boolean(config && typeof config.supabaseUrl === 'string' && /^https:\/\/[^/]+$/.test(config.supabaseUrl.replace(/\/$/, ''))
       && typeof config.supabaseAnonKey === 'string' && config.supabaseAnonKey.length > 20
-      && !/service_role/i.test(config.supabaseAnonKey));
+      && !/service_role|sb_secret_/i.test(config.supabaseAnonKey));
   }
 
   function parseHashSession(hash) {

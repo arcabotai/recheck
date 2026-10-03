@@ -183,7 +183,7 @@
     function renderMemory(memory) {
       setText('memory-provider', plain(memory.provider, 'Memory provider not reported'));
       setText('memory-status', plain(memory.status, 'status not reported'));
-      setText('memory-lesson', present(memory.lesson) ? plain(memory.lesson, '') : 'No lesson has been received. Recalled advice is not proof that it still works.');
+      setText('memory-lesson', present(memory.lesson) ? plain(memory.lesson, '') : 'No lesson received yet.');
       setText('memory-source', plain(memory.sourceRunId, 'Not reported'));
     }
 
@@ -346,7 +346,43 @@
     return { onState, onConnection };
   }
 
-  const api = { validateState, createPoller, mountPresenter, checkVerdict, literal };
+  // Agent-call status chips from GET /api/health. Never shows a call as live unless the backend says so.
+  const HEALTH_KEYS = ['memory', 'executor', 'repository'];
+  function healthChip(value) {
+    if (value === 'live' || value === 'proven' || value === 'ready') return [value, 'status-pass'];
+    if (typeof value !== 'string' || !value) return ['not reported', 'status-blocked'];
+    return [value.replace(/_/g, ' '), 'status-blocked'];
+  }
+  function renderHealth(doc, result) {
+    const status = doc.getElementById('api-status');
+    if (!status) return;
+    const body = result && result.body;
+    const valid = body !== null && typeof body === 'object' && !Array.isArray(body);
+    if (!valid) {
+      status.textContent = 'Backend not reachable from this page (' + ((result && result.error) || 'invalid /api/health response') + '). Calls below are the v1 contract.';
+      HEALTH_KEYS.forEach(key => { const chip = doc.getElementById('call-status-' + key); if (chip) { chip.textContent = 'offline'; chip.className = 'badge status-blocked'; } });
+      return;
+    }
+    const integrations = body.integrations !== null && typeof body.integrations === 'object' ? body.integrations : {};
+    status.textContent = 'Backend reachable · ready: ' + (body.ready === true ? 'yes' : 'no') + '. Non-live calls return 503 / cannot_verify, never a fake pass.';
+    HEALTH_KEYS.forEach(key => {
+      const chip = doc.getElementById('call-status-' + key);
+      if (!chip) return;
+      const [label, cls] = healthChip(integrations[key]);
+      chip.textContent = label; chip.className = 'badge ' + cls;
+    });
+  }
+  async function checkHealth(fetchImpl, apiBase) {
+    try {
+      const response = await fetchImpl((apiBase || '') + '/api/health', { method: 'GET', cache: 'no-store', headers: { Accept: 'application/json' } });
+      if (!response.ok) return { error: 'HTTP ' + response.status };
+      return { body: await response.json() };
+    } catch (error) {
+      return { error: String(error.message || error) };
+    }
+  }
+
+  const api = { validateState, createPoller, mountPresenter, checkVerdict, literal, renderHealth, checkHealth, healthChip };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 
   if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof module === 'undefined') {
@@ -355,5 +391,16 @@
     const presenter = mountPresenter(document);
     const poller = createPoller({ fetch: window.fetch.bind(window), apiBase: config.apiBase || '', onState: presenter.onState, onConnection: presenter.onConnection });
     poller.start();
+    const refreshHealth = () => checkHealth(window.fetch.bind(window), config.apiBase || '').then(result => renderHealth(document, result));
+    refreshHealth();
+    setInterval(refreshHealth, 15000);
+    document.querySelectorAll('button.copy[data-copy]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const source = document.getElementById(button.getAttribute('data-copy'));
+        try { await navigator.clipboard.writeText(source ? source.textContent : ''); button.textContent = 'Copied'; }
+        catch (_) { button.textContent = 'Select & copy'; }
+        setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+      });
+    });
   }
 })();
