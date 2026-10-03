@@ -111,4 +111,124 @@ test('renders literal model evidence, independent checks, receipts, and stale co
   assert.match(document.getElementById('stage-ledger').textContent, /tenant check/, 'offline must preserve real evidence');
 });
 
+test('flags unsupported pass claims instead of trusting the stage label', () => {
+  const app = loadApp(), document = testDocument();
+  const presenter = app.mountPresenter(document);
+  const state = fixture();
+  state.status = 'complete';
+  Object.assign(state.stages[0], { status: 'pass', checks: [], receipt: null });
+  Object.assign(state.stages[1], { status: 'fail', checks: [{ name: 'revoked member denied', expected: false, actual: true, passed: false }] });
+  Object.assign(state.stages[2], { status: 'pass', checks: [{ name: 'contradiction', expected: false, actual: true, passed: true }], receipt: { id: 'r', durationMs: 5 } });
+  presenter.onState(state);
+  const ledger = document.getElementById('stage-ledger').textContent;
+  assert.match(ledger, /Reported pass has no execution receipt/);
+  assert.match(ledger, /Reported pass has no independent checks/);
+  assert.match(ledger, /CONFLICT/);
+  assert.match(ledger, /Reported pass contains checks that did not pass/);
+  assert.match(document.getElementById('run-detail').textContent, /failing stage\(s\): Recheck/, 'complete must not erase a failed stage');
+  assert.equal(document.getElementById('sequence-replay-status').textContent, 'FAIL');
+});
+
+test('preserves typed literals and never shows success before evidence arrives', () => {
+  const app = loadApp(), document = testDocument();
+  assert.equal(app.literal(false), 'false');
+  assert.equal(app.literal('false'), '"false"');
+  assert.equal(app.literal(0), '0');
+  assert.equal(app.literal(null), 'null');
+  assert.equal(app.checkVerdict({ expected: 0, actual: 0 }), 'unevaluated');
+  assert.equal(app.checkVerdict({ expected: 0, actual: 0, passed: true }), 'pass');
+  const presenter = app.mountPresenter(document);
+  presenter.onConnection({ status: 'unreachable', message: 'HTTP 503' });
+  assert.match(document.getElementById('connection-detail').textContent, /No evidence has been received/);
+  assert.match(document.getElementById('connection-detail').textContent, /HTTP 503/);
+  assert.equal(document.getElementById('stage-ledger').textContent, '', 'no stages are invented while offline');
+});
+
+test('blocked state surfaces the backend error and keeps compute unverified', () => {
+  const app = loadApp(), document = testDocument();
+  const presenter = app.mountPresenter(document);
+  const state = fixture();
+  state.status = 'blocked'; state.error = 'AI Gateway completion returned HTTP 403';
+  state.stages[0].status = 'blocked';
+  presenter.onState(state);
+  assert.equal(document.getElementById('backend-error').hidden, false);
+  assert.match(document.getElementById('backend-error').textContent, /HTTP 403/);
+  assert.match(document.getElementById('run-observation').textContent, /blocked/i);
+  assert.equal(document.getElementById('compute-status').textContent, 'Unverified');
+  state.status = 'idle'; state.error = null; presenter.onState(state);
+  assert.equal(document.getElementById('backend-error').hidden, true);
+});
+
+test('presenter source contains no HTML sinks and no write endpoints', () => {
+  const source = fs.readFileSync(appPath, 'utf8');
+  assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write/);
+  assert.doesNotMatch(source, /\/api\/demo|method:\s*'POST'.*\/api\//);
+});
+
+// Supabase Auth session layer. All tokens and responses below are synthetic test doubles.
+function loadAuth() {
+  const context = vm.createContext({ module: { exports: {} }, console, URLSearchParams, Date, JSON });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, 'auth.js'), 'utf8'), context, { filename: 'auth.js' });
+  return context.module.exports;
+}
+const testConfig = { supabaseUrl: 'https://example-ref.supabase.co', supabaseAnonKey: 'test-anon-key-not-a-real-credential-0000' };
+function memoryStorage() { const map = new Map(); return { getItem: k => map.has(k) ? map.get(k) : null, setItem: (k, v) => map.set(k, v), removeItem: k => map.delete(k), map }; }
+
+test('auth stays disabled without verified public config and rejects service-role keys', async () => {
+  const auth = loadAuth();
+  assert.equal(auth.configured({}), false);
+  assert.equal(auth.configured({ supabaseUrl: 'http://insecure.example', supabaseAnonKey: testConfig.supabaseAnonKey }), false);
+  assert.equal(auth.configured({ supabaseUrl: testConfig.supabaseUrl, supabaseAnonKey: 'service_role-key-should-never-ship-xx' }), false);
+  assert.equal(auth.configured(testConfig), true);
+  const calls = [];
+  const client = auth.createAuth({ config: {}, fetch: async (...a) => { calls.push(a); }, storage: memoryStorage() });
+  assert.equal((await client.init('')).status, 'unconfigured');
+  assert.equal(calls.length, 0, 'an unconfigured client makes no network calls');
+  const shipped = fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8');
+  assert.doesNotMatch(shipped, /service_role|sb_secret_|eyJ[A-Za-z0-9_-]{20,}/, 'no secrets or real tokens in shipped config');
+});
+
+test('magic-link session is confirmed by Supabase, not by decoding the token, and sign-out clears it', async () => {
+  const auth = loadAuth(), storage = memoryStorage(), calls = [];
+  const fetch = async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith('/auth/v1/user')) {
+      if (init.headers.Authorization !== 'Bearer access-test') return { ok: false, status: 401, json: async () => ({ msg: 'invalid JWT' }) };
+      return { ok: true, status: 200, json: async () => ({ id: 'user-test', email: 'tester@example.com' }) };
+    }
+    if (url.endsWith('/auth/v1/logout')) return { ok: true, status: 204, json: async () => { throw new Error('no body'); } };
+    if (url.includes('/auth/v1/otp')) return { ok: true, status: 200, json: async () => ({}) };
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  const client = auth.createAuth({ config: testConfig, fetch, storage });
+  const views = []; client.onChange(v => views.push(v));
+  const result = await client.init('#access_token=access-test&refresh_token=refresh-test&expires_in=3600&token_type=bearer');
+  assert.equal(result.status, 'signed-in');
+  assert.equal(views.at(-1).user.email, 'tester@example.com');
+  assert.equal(calls[0].init.headers.apikey, testConfig.supabaseAnonKey);
+  assert.ok(storage.getItem(auth.STORAGE_KEY), 'session persisted for this tab');
+
+  const bad = auth.createAuth({ config: testConfig, fetch, storage: memoryStorage() });
+  const rejected = await bad.init('#access_token=forged&refresh_token=x&expires_in=3600');
+  assert.equal(rejected.status, 'error');
+  assert.match(rejected.message, /401/);
+
+  await client.signOut();
+  assert.equal(storage.getItem(auth.STORAGE_KEY), null);
+  assert.equal(views.at(-1).signedIn, false);
+  assert.ok(calls.some(c => c.url.endsWith('/auth/v1/logout')));
+  await assert.rejects(() => client.authorizedFetch('/api/v1/verifications/x'), /Not signed in/);
+  await assert.rejects(() => client.sendMagicLink('not-an-email', 'https://app.test/'), /valid email/);
+  await client.sendMagicLink('tester@example.com', 'https://app.test/');
+  const otp = calls.find(c => c.url.includes('/otp'));
+  assert.equal(JSON.parse(otp.init.body).create_user, false, 'sign-in never self-registers new users');
+});
+
+test('auth error returned in the redirect hash is surfaced, not treated as signed in', () => {
+  const auth = loadAuth();
+  assert.equal(auth.parseHashSession('#error=access_denied&error_description=Email+link+is+invalid+or+has+expired').error, 'Email link is invalid or has expired');
+  assert.equal(auth.parseHashSession('#access_token=only'), null);
+  assert.equal(auth.parseHashSession(''), null);
+});
+
 module.exports = { fixture, loadApp };
