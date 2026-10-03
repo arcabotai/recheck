@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: baseline passes, stale replay fails revoked membership, repair passes unchanged suite
+ok 1 - baseline passes, stale replay fails revoked membership, repair passes unchanged suite
+  ---
+  duration_ms: 149.470667
+  type: 'test'
+  ...
+# Subtest: unsupported candidate code and candidate assertion tampering cannot verify
+ok 2 - unsupported candidate code and candidate assertion tampering cannot verify
+  ---
+  duration_ms: 0.282459
+  type: 'test'
+  ...
+# Subtest: validator rejects field traversal, unknown operations, excess depth/size and extra keys
+ok 3 - validator rejects field traversal, unknown operations, excess depth/size and extra keys
+  ---
+  duration_ms: 0.204041
+  type: 'test'
+  ...
+# Subtest: real worker timeout yields cannot_verify and terminal cancellation
+ok 4 - real worker timeout yields cannot_verify and terminal cancellation
+  ---
+  duration_ms: 3.691709
+  type: 'test'
+  ...
+# Subtest: incomplete, nonboolean, duplicate or dishonest worker output cannot verify
+ok 5 - incomplete, nonboolean, duplicate or dishonest worker output cannot verify
+  ---
+  duration_ms: 0.648208
+  type: 'test'
+  ...
+# Subtest: frozen suite rejects modified bytes and caller cannot mutate later loads
+ok 6 - frozen suite rejects modified bytes and caller cannot mutate later loads
+  ---
+  duration_ms: 0.928667
+  type: 'test'
+  ...
+# Subtest: bounded process captures real incomplete output, rejects nonzero exit and output overflow
+ok 7 - bounded process captures real incomplete output, rejects nonzero exit and output overflow
+  ---
+  duration_ms: 109.538875
+  type: 'test'
+  ...
+# Subtest: byte bounds, invalid suite and invalid trusted timeout fail closed
+ok 8 - byte bounds, invalid suite and invalid trusted timeout fail closed
+  ---
+  duration_ms: 0.802166
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 313.791291

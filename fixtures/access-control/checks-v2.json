@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 1,
+  "id": "access-control-checks-v2",
+  "requirementVersion": "v2",
+  "checks": [
+    {
+      "name": "active authenticated same tenant",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": true
+    },
+    {
+      "name": "anonymous actor",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": false,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "inactive actor",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": false
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "cross tenant actor",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "other",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing actor",
+      "input": {
+        "actor": null,
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing document",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": null,
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing authentication flag",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "truthy string is not authentication",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": "true",
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing tenant does not match missing tenant",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "revoked same tenant member",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": false
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "membership for another actor",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "bob",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "membership for another tenant",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "other",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing membership",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": null
+      },
+      "expected": false
+    },
+    {
+      "name": "missing membership active flag",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme"
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "truthy membership active string",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": "true"
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing membership actor",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing membership tenant",
+      "input": {
+        "actor": {
+          "id": "alice",
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "active": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "missing actor identity",
+      "input": {
+        "actor": {
+          "tenantId": "acme",
+          "authenticated": true,
+          "active": true
+        },
+        "document": {
+          "id": "doc-1",
+          "tenantId": "acme"
+        },
+        "membership": {
+          "actorId": "alice",
+          "tenantId": "acme",
+          "active": true
+        }
+      },
+      "expected": false
+    }
+  ]
+}
