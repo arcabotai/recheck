@@ -8,7 +8,9 @@
   <title>Recheck — Don't trust yesterday's fix.</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/config.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/auth.js" defer></script>
 </head>
 <body>
   <!-- Product brief: hackathon judges inspect a read-only synthetic access-control
@@ -20,7 +22,18 @@
   <a class="skip-link" href="#main">Skip to the evidence</a>
   <header class="masthead page-width">
     <a class="wordmark" href="#main" aria-label="Recheck, evidence ledger"><span class="ledger-mark" aria-hidden="true"><i></i><i></i><i></i></span>recheck<span class="wordmark-period">.</span></a>
-    <div class="masthead-meta"><span class="specimen-label">Synthetic scenario</span><span class="read-only">Read-only presenter</span></div>
+    <div class="masthead-meta"><span class="specimen-label">Synthetic scenario</span><span class="read-only">Read-only presenter</span>
+      <div class="auth-panel" id="auth-panel">
+        <span id="auth-status" class="auth-status" role="status" aria-live="polite">Checking sign-in…</span>
+        <button type="button" id="auth-toggle" class="auth-button" aria-expanded="false" aria-controls="auth-form" hidden>Sign in</button>
+        <button type="button" id="auth-signout" class="auth-button" hidden>Sign out</button>
+        <form id="auth-form" class="auth-form" hidden>
+          <label for="auth-email">Workspace email</label>
+          <input id="auth-email" name="email" type="email" autocomplete="email" required>
+          <button type="submit" id="auth-submit" class="auth-button">Email me a link</button>
+        </form>
+      </div>
+    </div>
   </header>
 
   <main id="main" class="page-width" tabindex="-1">
@@ -50,7 +63,7 @@
     </nav>
 
     <section class="memory-note" aria-labelledby="memory-title">
-      <div class="memory-heading"><p class="eyebrow">Retrieved experience</p><h2 id="memory-title">A lesson is<br>a hypothesis.</h2><p><span id="memory-provider">Memory provider not reported</span> / <span id="memory-status">Awaiting state</span></p></div>
+      <div class="memory-heading"><p class="eyebrow">Retrieved experience</p><h2 id="memory-title">A lesson is <br>a hypothesis.</h2><p><span id="memory-provider">Memory provider not reported</span> / <span id="memory-status">Awaiting state</span></p></div>
       <div class="memory-content"><blockquote id="memory-lesson">No lesson has been received. Recalled advice is not proof that it still works.</blockquote><p class="memory-source">Source run <span id="memory-source">Not reported</span></p></div>
     </section>
 
