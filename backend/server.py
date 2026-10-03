@@ -10,8 +10,9 @@ from backend.supabase import BackendError, SupabaseClient
 
 class Application:
     def __init__(self, *, config=None, test_transport=None):
-        self.client = SupabaseClient(dict(os.environ if config is None else config),
-                                     test_transport=test_transport)
+        config = dict(os.environ if config is None else config)
+        self.state_path = config.get('RECHECK_STATE_PATH')
+        self.client = SupabaseClient(config, test_transport=test_transport)
 
     def dispatch(self, method, path, headers, body=b''):
         try:
@@ -21,7 +22,8 @@ class Application:
 
     def _dispatch(self, method, path, headers, body):
         if method == 'GET' and path == '/api/state':
-            return 200, blocked_state()
+            from backend.state import public_snapshot
+            return 200, public_snapshot(self.state_path)
         if method == 'GET' and path == '/api/health':
             return 200, {'ready': False, 'missingConfig': self.client.missing,
                          'configurationValid': self.client.configured,
