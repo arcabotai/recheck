@@ -251,6 +251,24 @@ test('auth error returned in the redirect hash is surfaced, not treated as signe
 
 module.exports = { fixture, loadApp };
 
+test('HTTP 200 recorded evidence stays labelled recorded even with verified Compute receipts', async () => {
+  const app = loadApp(), document = testDocument();
+  const state = fixture(); state.status = 'complete'; state.runId = 'synthetic-compute-recording';
+  state.environment.verified = true;
+  state.presentation = { source: 'recorded', live: false, readOnly: true };
+  const presenter = app.mountPresenter(document);
+  presenter.onState(state, { source: 'api' }); presenter.onConnection({ status: 'online' });
+  assert.match(document.getElementById('run-kind').textContent, /recorded.*not live/i);
+  assert.match(document.getElementById('connection-label').textContent, /recorded.*not live/i);
+  assert.doesNotMatch(document.getElementById('connection-detail').textContent, /not reachable|unverified/i);
+  app.renderHealth(document, { body: { service: 'recheck-read-only-presenter', ready: false, integrations: { memory: 'unavailable', executor: 'unavailable', repository: 'unavailable' } } });
+  assert.match(document.getElementById('api-status').textContent, /read-only.*recorded.*hosted.*unavailable/i);
+  // Synthetic TEST fixture: a recorded verified environment is still not a live run.
+  const receipted = JSON.parse(fs.readFileSync(path.join(__dirname, 'recorded-state.json')));
+  receipted.environment.verified = true;
+  assert.doesNotThrow(() => app.validateRecorded(receipted));
+});
+
 test('recorded snapshot fallback is labelled not live, only used before API evidence, and never accepted as verified', async () => {
   const app = loadApp(), document = testDocument();
   const presenter = app.mountPresenter(document);
@@ -287,8 +305,9 @@ test('recorded snapshot fallback is labelled not live, only used before API evid
 
 test('published recorded snapshot is byte-identical to the backend recording and passes the strict recorded check', () => {
   const published = fs.readFileSync(path.join(__dirname, 'recorded-state.json'));
-  const source = path.join(__dirname, '..', 'demo', 'recorded-local-state.json');
-  if (fs.existsSync(source)) assert.ok(published.equals(fs.readFileSync(source)), 'public/recorded-state.json drifted from demo/recorded-local-state.json');
+  const compute = path.join(__dirname, '..', 'demo', 'recorded-compute-state.json');
+  const source = fs.existsSync(compute) ? compute : path.join(__dirname, '..', 'demo', 'recorded-local-state.json');
+  if (fs.existsSync(source)) assert.ok(published.equals(fs.readFileSync(source)), 'public/recorded-state.json drifted from the selected demo recording');
   const state = loadApp().validateRecorded(JSON.parse(published));
   assert.deepEqual(state.stages.map(stage => stage.status), ['pass', 'fail', 'pass']);
 });
