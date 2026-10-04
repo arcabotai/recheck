@@ -15,7 +15,7 @@ The main Notion page contains the named assignments and working countdown. `docs
 - Frontend hosting: **Vercel**. Frontend source: `public/`.
 - Authentication: **Supabase Auth**. Claude implements login/session/sign-out UI using verified public configuration; Cad configures and validates authentication on protected backend endpoints.
 - Authoritative records/evidence: **Supabase Postgres**, with workspace isolation and RLS as applicable.
-- Intended isolated evaluator: **Supabase Compute**. Actual entitlement and execution must be proved; do not label another executor Compute.
+- Evaluator: **Supabase Compute**, authenticated remote Deno execution proved. A restricted AST interpreter is not a claim of hostile multi-tenant production isolation.
 - Synthetic experience retrieval: **Honcho**, separate from private company conversation history.
 - `GET /api/state` and `GET /api/health` must remain reachable from the Vercel frontend via an agreed proxy/origin seam. Never run unsafe candidate code in the frontend.
 
@@ -38,13 +38,30 @@ Felipe owns scope decisions, presentation, and submission. Cad integrates verifi
 
 ## Current status
 
-This is the credential-free starter, not a working deployment. The existing presenter is an interrupted partial implementation. Its focused suite has **two passing tests and one failing rendering test** (`app.mountPresenter is not a function`). Claude owns that recovery. Backend, evaluator, real model/memory loop, Supabase authentication, and live deployment are not implemented/proved by this seed commit.
+The complete real workflow passed: Claude Sonnet4.6 generation -> Supabase durable write/readback -> Honcho ingest, exact readback and semantic retrieval -> unchanged recalled candidate against changed checks -> model repair. **All three evaluations executed on authenticated Supabase Compute**, not a local fallback.
+
+- Run: `2a068d49-6b34-420a-8674-cfa6a7c2792d`.
+- Learn: **11/11, works**.
+- Recheck: identical candidate hash, **9/18, fails**.
+- Adapt: **18/18, works**.
+- Final run independently fetched again from Supabase and exact public snapshot validated.
+- Evidence: `demo/recorded-compute-state.json`. Earlier local run is preserved separately.
+- Public frontend: https://recheck-klh7.vercel.app . Recorded evidence must stay labelled recorded, not a new live execution trigger.
+- Real synthetic Supabase user sessions and own/foreign-workspace RLS isolation passed. Public Auth configuration and exact callback readback passed; magic-link email delivery is not claimed.
+
+### Use from an agent/operator
+
+Inject server-only `AI_GATEWAY_API_KEY`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `HONCHO_API_KEY`, then:
 
 ```sh
-npm run test:ui
+python -m backend.demo --executor supabase-compute --output-dir ./recheck-demo-output-new
 ```
 
-The failure is deliberately documented, not concealed. Test fixtures are not real execution evidence.
+The CLI has a120second wall-clock bound, at most3 model requests, frozen checks and no local fallback. It is currently a fixed-project, synthetic access-control demo, not a general production coding executor. `backend/COMPUTE.md` documents the actual transport and provenance boundary.
+
+**Hosted v1 POST operations remain unavailable.** The webpage's three-call schema is a proposed authenticated API contract, not a deployed execution service. The working consumption surface is the bounded CLI and internal authenticated Compute adapter.
+
+Checks: backend36, UI13, evaluator/oracle21, adversarial48 Python+8 Node, Compute service9 Node+controller4 Python passed. Test fixtures are labelled; the recorded real provider run is separate evidence.
 
 ## Safety and proof
 

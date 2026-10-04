@@ -11,3 +11,6 @@ notion/
 evidence/
 *.zip
 *.tar.gz
+compute/owned-resource.json
+compute/remote-proof.json
+recheck-demo-output*/

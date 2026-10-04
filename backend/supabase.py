@@ -44,8 +44,10 @@ def http_json(request, timeout):
     except HTTPError as error:
         status = error.code
         error.close()
-        raise BackendError(401 if status == 401 else 503,
-                           'invalid_token' if status == 401 else 'upstream_unavailable') from None
+        invalid_auth = status == 401 or (urlsplit(request.full_url).path == '/auth/v1/user'
+                                         and status in (400, 403))
+        raise BackendError(401 if invalid_auth else 503,
+                           'invalid_token' if invalid_auth else 'upstream_unavailable') from None
     except (URLError, TimeoutError, OSError, ValueError):
         raise BackendError(503, 'upstream_unavailable') from None
 
