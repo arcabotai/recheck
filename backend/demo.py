@@ -325,7 +325,7 @@ def verify_result(result, text, suite, provenance, executor):
             or receipt.get('requirementVersion') != suite or receipt.get('executionProvider') != executor.provider
             or receipt.get('model') != provenance['model'] or receipt.get('requestId') != provenance['requestId']
             or receipt.get('sourceRunId') != provenance['sourceRunId']
-            or receipt.get('terminalStatus') != 'completed' or receipt.get('exitCode') != 0
+            or receipt.get('terminalStatus') != 'completed' or type(receipt.get('exitCode')) is not int or receipt.get('exitCode') != 0
             or not receipt.get('executionId') or not re.fullmatch(r'[a-f0-9]{64}', receipt.get('environmentFingerprint', ''))
             or type(receipt.get('durationMs')) is not int or receipt['durationMs'] < 0
             or not isinstance(receipt.get('at'), str) or not isinstance(receipt.get('id'), str)
@@ -334,14 +334,21 @@ def verify_result(result, text, suite, provenance, executor):
     return result
 
 
-def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, memory=None, require_honcho=False, total_seconds=120):
+def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, executor_name='local-node', memory=None, require_honcho=False, total_seconds=120):
     """Adapters are explicit trusted seams, never selected from request bodies or fixture defaults."""
     budget = Budget(total_seconds)
     config = dict(os.environ if config is None else config)
     # Check credentials BEFORE creating output or invoking any evaluator/model.
     model = model if model is not None else GatewayModel(config)
     store = store if store is not None else SupabaseDemoStore(config)
-    executor = executor if executor is not None else LocalNodeExecutor()
+    if executor_name not in ('local-node', 'supabase-compute'):
+        raise DemoError('invalid_executor_selection')
+    if executor is None:
+        if executor_name == 'supabase-compute':
+            from backend.compute import RemoteComputeExecutor
+            executor = RemoteComputeExecutor(config)
+        else:
+            executor = LocalNodeExecutor()
     if memory is None and config.get('HONCHO_API_KEY'):
         memory = HonchoMemory(config)
     if require_honcho and memory is None:
@@ -377,7 +384,7 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
             for field in ('model', 'requestId'):
                 if not isinstance(response.get(field), str) or not re.fullmatch(r'[A-Za-z0-9._:/-]{1,256}', response[field]):
                     raise DemoError('invalid_model_metadata')
-            for name in ('AI_GATEWAY_API_KEY', 'SUPABASE_SECRET_KEY', 'HONCHO_API_KEY'):
+            for name in ('AI_GATEWAY_API_KEY', 'SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ACCESS_TOKEN', 'HONCHO_API_KEY'):
                 secret = config.get(name)
                 if secret and secret in json.dumps(response):
                     raise DemoError('unsafe_model_response')
@@ -397,6 +404,7 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
         if isinstance(result, dict) and isinstance(result.get('receipt'), dict):
             write_json(directory / (stage['id'] + '.receipt.json'), result['receipt'])
         result = verify_result(result, response['text'], suite, provenance, executor)
+        state['environment']['verified'] = executor.provider != 'local-node' and getattr(executor, 'verified', False) is True
         stage.update(status='pass' if result['verdict'] == 'works' else 'fail',
                      checks=result['checks'], receipt=result['receipt'],
                      summary='Independent ' + suite + ' checks: ' + result['verdict'],
@@ -476,6 +484,8 @@ def run_demo(output_dir, *, config=None, model=None, store=None, executor=None, 
 def main():
     parser = argparse.ArgumentParser(description='Real synthetic Recheck demo; credentials from server environment only')
     parser.add_argument('--output-dir', required=True, help='Dedicated directory for synthetic state/artifacts/receipts')
+    parser.add_argument('--executor', choices=('local-node', 'supabase-compute'), default='local-node',
+                        help='Explicit executor; remote errors never fall back to local execution')
     args = parser.parse_args()
     # Absolute wall-clock bound includes network/body reads; no retries.
     def timeout(_signal, _frame):
@@ -483,7 +493,7 @@ def main():
     signal.signal(signal.SIGALRM, timeout)
     signal.setitimer(signal.ITIMER_REAL, 120)
     try:
-        state = run_demo(args.output_dir, require_honcho=True)
+        state = run_demo(args.output_dir, require_honcho=True, executor_name=args.executor)
         print(json.dumps({'status': state['status'], 'runId': state['runId'], 'error': state['error'],
                           'statePath': str(Path(args.output_dir).resolve() / 'state.json')}))
         return 0 if state['status'] == 'complete' else 2

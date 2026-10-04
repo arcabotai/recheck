@@ -1,4 +1,16 @@
-# Recorded local execution evidence
+# Recorded execution evidence
+
+## Complete real Compute run
+
+`recorded-compute-state.json` is the actual completed synthetic run `2a068d49-6b34-420a-8674-cfa6a7c2792d`: real Claude Sonnet4.6 generation/repair, durable Supabase writes and exact readbacks, actual Honcho ingest/readback/semantic recall, and authenticated Supabase Compute execution for **every** stage.
+
+Learn11/11 -> unchanged recalled candidate Recheck9/18 fails -> Adapt18/18. Learn/replay hashes are identical. Actual runtime is Deno2.9.0. The final completed run was independently fetched again from Supabase; the exact public projection and secret scan passed.
+
+This snapshot is recorded evidence, not a new live invocation. Compute execution is verified, but the website does not start new model runs. Receipt model/request/source-run fields are actual caller metadata, not remote attestation; artifact/suite/check/runtime/log/terminal fields came from the authenticated remote evaluator.
+
+To create a new actual run: `python -m backend.demo --executor supabase-compute --output-dir <new-dir>` with server-only environment credentials. No credential values belong in public files.
+
+## Earlier local run
 
 `recorded-local-state.json` is a real completed synthetic Recheck run, not mocked state and not a live execution trigger.
 
