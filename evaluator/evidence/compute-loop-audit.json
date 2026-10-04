@@ -1,0 +1,540 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-10-04T00:13:34.553Z",
+  "sourceCommit": "1ae501082f28f0e8bf94121ee25edc8a246f52f2",
+  "sourcePath": "demo/recorded-compute-state.json",
+  "sourceSnapshotHash": "ff782d6d95dc88bf2b03b0ce6c0ba77e009ba4bedbd89ac6f045452c58953bd7",
+  "sourceRunId": "2a068d49-6b34-420a-8674-cfa6a7c2792d",
+  "unchangedLearnReplayCandidate": true,
+  "scope": "Independent local re-execution of exact published candidate bytes and all frozen checks; published remote receipt hashes internally consistent. Remote execution and provider/model/Honcho/Supabase interactions are Cad source evidence, not independently authenticated by this audit.",
+  "stages": [
+    {
+      "stage": "learn",
+      "publishedChecksMatch": true,
+      "publishedHashesMatch": true,
+      "publishedRemoteReceipt": {
+        "id": "610d17a7-b2f0-4a99-b5f1-82e87d18b1ac",
+        "at": "2026-10-04T00:07:25.526Z",
+        "startedAt": "2026-10-04T00:07:25.237Z",
+        "environmentFingerprint": "1096a82ddf4583e616843f70553f781dd6d20798db59cf79c21f6d7aad9fbfd5",
+        "environment": {
+          "runtime": "deno",
+          "version": "2.9.0",
+          "v8": "14.9.207.2-rusty",
+          "platform": "linux",
+          "arch": "aarch64",
+          "evaluatorHash": "f57c83ad8c04321f519efc5df2882200f70f49294a7627fb98158ba4a8dbb35f",
+          "requirementVersion": "v1",
+          "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+          "candidateFormat": "recheck-policy-v1",
+          "executionMode": "restricted-policy-ast"
+        },
+        "artifactHash": "feac2524aa6f959b1cdffcd390be899f722283a0e1f69cb8308e72b0c05d2bb1",
+        "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+        "requirementVersion": "v1",
+        "durationMs": 288,
+        "executionProvider": "Supabase Compute",
+        "executionId": "request:610d17a7-b2f0-4a99-b5f1-82e87d18b1ac",
+        "terminalStatus": "completed",
+        "exitCode": 0,
+        "signal": null,
+        "stdoutHash": "6dbabae7bafa5420e4328a34b7e7b3e5ce39aba4ebc9aee2c7f23b2311ee9fb3",
+        "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "rawStdoutHash": "afd36f0d10b37d72569a11703f1e61f38928969c25a150ba5b7218ea9019831f",
+        "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "anthropic/claude-sonnet-4.6",
+        "requestId": "gen_01M423S3FWKWM0ZY1KDEBRM1R3",
+        "sourceRunId": null
+      },
+      "independentLocalResult": {
+        "schemaVersion": 1,
+        "status": "finished",
+        "verdict": "works",
+        "checks": [
+          {
+            "name": "active authenticated same tenant",
+            "expected": true,
+            "actual": true,
+            "passed": true
+          },
+          {
+            "name": "anonymous actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "inactive actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "cross tenant actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing document",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing authentication flag",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "truthy string is not authentication",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing tenant does not match missing tenant",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "v1 membership is irrelevant",
+            "expected": true,
+            "actual": true,
+            "passed": true
+          },
+          {
+            "name": "v1 revoked membership is irrelevant",
+            "expected": true,
+            "actual": true,
+            "passed": true
+          }
+        ],
+        "receipt": {
+          "id": "b26f1dcf-1570-4245-9b6a-bcdf826791c5",
+          "at": "2026-10-04T00:13:34.463Z",
+          "startedAt": "2026-10-04T00:13:34.409Z",
+          "environmentFingerprint": "08d5e7eaae92d401940d7f9119a5f23a4bf6e0158ef4807eed8ba1169ca553f6",
+          "environment": {
+            "node": "v22.22.3",
+            "platform": "darwin",
+            "arch": "arm64",
+            "evaluatorHash": "848b60aa31ba39927ad57156b5ac50116b70ae26b87568ff345c3d08ae01f754",
+            "requirementVersion": "v1",
+            "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+            "candidateFormat": "recheck-policy-v1"
+          },
+          "artifactHash": "feac2524aa6f959b1cdffcd390be899f722283a0e1f69cb8308e72b0c05d2bb1",
+          "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+          "requirementVersion": "v1",
+          "durationMs": 49,
+          "executionProvider": "local-node",
+          "executionId": "pid:34363",
+          "terminalStatus": "completed",
+          "exitCode": 0,
+          "signal": null,
+          "stdoutHash": "211b3c912edbd4d352c8c955690ae1005bb1d6340b3b6fc3fb5b3dd96e8d346f",
+          "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "rawStdoutHash": "afd36f0d10b37d72569a11703f1e61f38928969c25a150ba5b7218ea9019831f",
+          "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "model": null,
+          "requestId": null,
+          "sourceRunId": null
+        },
+        "logs": {
+          "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"expected\":true,\"actual\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"inactive actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing document\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"v1 membership is irrelevant\",\"expected\":true,\"actual\":true,\"passed\":true},{\"name\":\"v1 revoked membership is irrelevant\",\"expected\":true,\"actual\":true,\"passed\":true}]}",
+          "stderr": ""
+        },
+        "error": null
+      }
+    },
+    {
+      "stage": "replay",
+      "publishedChecksMatch": true,
+      "publishedHashesMatch": true,
+      "publishedRemoteReceipt": {
+        "id": "5f387dd2-d4fe-4a9c-887b-014ac5b35cb4",
+        "at": "2026-10-04T00:07:30.025Z",
+        "startedAt": "2026-10-04T00:07:30.023Z",
+        "environmentFingerprint": "fceb68df03674c3f7b63020184d1ab021d87eb5c2ddf9618065453920b8fdcd5",
+        "environment": {
+          "runtime": "deno",
+          "version": "2.9.0",
+          "v8": "14.9.207.2-rusty",
+          "platform": "linux",
+          "arch": "aarch64",
+          "evaluatorHash": "f57c83ad8c04321f519efc5df2882200f70f49294a7627fb98158ba4a8dbb35f",
+          "requirementVersion": "v2",
+          "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+          "candidateFormat": "recheck-policy-v1",
+          "executionMode": "restricted-policy-ast"
+        },
+        "artifactHash": "feac2524aa6f959b1cdffcd390be899f722283a0e1f69cb8308e72b0c05d2bb1",
+        "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+        "requirementVersion": "v2",
+        "durationMs": 2,
+        "executionProvider": "Supabase Compute",
+        "executionId": "request:5f387dd2-d4fe-4a9c-887b-014ac5b35cb4",
+        "terminalStatus": "completed",
+        "exitCode": 0,
+        "signal": null,
+        "stdoutHash": "937467a36766e40bd167fa06e024b60a6046b5c56595bd27c9a252f616203aa8",
+        "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "rawStdoutHash": "617c0de547670a6ef7dd6ea513edb642881c0be0aa18a6242336c1e821c86901",
+        "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "anthropic/claude-sonnet-4.6",
+        "requestId": "gen_01M423S3FWKWM0ZY1KDEBRM1R3",
+        "sourceRunId": "2a068d49-6b34-420a-8674-cfa6a7c2792d"
+      },
+      "independentLocalResult": {
+        "schemaVersion": 1,
+        "status": "finished",
+        "verdict": "fails",
+        "checks": [
+          {
+            "name": "active authenticated same tenant",
+            "expected": true,
+            "actual": true,
+            "passed": true
+          },
+          {
+            "name": "anonymous actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "inactive actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "cross tenant actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing document",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing authentication flag",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "truthy string is not authentication",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing tenant does not match missing tenant",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "revoked same tenant member",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "membership for another actor",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "membership for another tenant",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "missing membership",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "missing membership active flag",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "truthy membership active string",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "missing membership actor",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "missing membership tenant",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          },
+          {
+            "name": "missing actor identity",
+            "expected": false,
+            "actual": true,
+            "passed": false
+          }
+        ],
+        "receipt": {
+          "id": "a6c0f1f6-f75c-4a6f-b90e-00d7f7b546e3",
+          "at": "2026-10-04T00:13:34.508Z",
+          "startedAt": "2026-10-04T00:13:34.463Z",
+          "environmentFingerprint": "ef4907633750ab54bbfe4a70df3284c585a08cbfcdc02a3ee396f7ba1c35577c",
+          "environment": {
+            "node": "v22.22.3",
+            "platform": "darwin",
+            "arch": "arm64",
+            "evaluatorHash": "848b60aa31ba39927ad57156b5ac50116b70ae26b87568ff345c3d08ae01f754",
+            "requirementVersion": "v2",
+            "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+            "candidateFormat": "recheck-policy-v1"
+          },
+          "artifactHash": "feac2524aa6f959b1cdffcd390be899f722283a0e1f69cb8308e72b0c05d2bb1",
+          "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+          "requirementVersion": "v2",
+          "durationMs": 44,
+          "executionProvider": "local-node",
+          "executionId": "pid:34364",
+          "terminalStatus": "completed",
+          "exitCode": 0,
+          "signal": null,
+          "stdoutHash": "10f21c51e946793ec670b2ca6a8070106d87900e811e2e2c37753e1671216a6f",
+          "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "rawStdoutHash": "617c0de547670a6ef7dd6ea513edb642881c0be0aa18a6242336c1e821c86901",
+          "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "model": null,
+          "requestId": null,
+          "sourceRunId": null
+        },
+        "logs": {
+          "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"expected\":true,\"actual\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"inactive actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing document\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"revoked same tenant member\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"membership for another actor\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"membership for another tenant\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"missing membership\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"missing membership active flag\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"truthy membership active string\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"missing membership actor\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"missing membership tenant\",\"expected\":false,\"actual\":true,\"passed\":false},{\"name\":\"missing actor identity\",\"expected\":false,\"actual\":true,\"passed\":false}]}",
+          "stderr": ""
+        },
+        "error": null
+      }
+    },
+    {
+      "stage": "repair",
+      "publishedChecksMatch": true,
+      "publishedHashesMatch": true,
+      "publishedRemoteReceipt": {
+        "id": "01dec525-ac18-4f2f-82e6-103a559f3ced",
+        "at": "2026-10-04T00:07:33.504Z",
+        "startedAt": "2026-10-04T00:07:33.186Z",
+        "environmentFingerprint": "fceb68df03674c3f7b63020184d1ab021d87eb5c2ddf9618065453920b8fdcd5",
+        "environment": {
+          "runtime": "deno",
+          "version": "2.9.0",
+          "v8": "14.9.207.2-rusty",
+          "platform": "linux",
+          "arch": "aarch64",
+          "evaluatorHash": "f57c83ad8c04321f519efc5df2882200f70f49294a7627fb98158ba4a8dbb35f",
+          "requirementVersion": "v2",
+          "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+          "candidateFormat": "recheck-policy-v1",
+          "executionMode": "restricted-policy-ast"
+        },
+        "artifactHash": "f360533b214a133cc25bce07ba0372b3f621580f2d0f738e3c4eb6a5f350c937",
+        "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+        "requirementVersion": "v2",
+        "durationMs": 318,
+        "executionProvider": "Supabase Compute",
+        "executionId": "request:01dec525-ac18-4f2f-82e6-103a559f3ced",
+        "terminalStatus": "completed",
+        "exitCode": 0,
+        "signal": null,
+        "stdoutHash": "237a44ed979595cb2d65f9c6bb4e88b2b89907724b3d0ba8a913c787cc9ceb94",
+        "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "rawStdoutHash": "ad066630a9376ede33991d20839fabd00afe6421cdbdab051f644a12621bff6f",
+        "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "anthropic/claude-sonnet-4.6",
+        "requestId": "gen_01M423SDN9SK7RGAHNBZY7EC2P",
+        "sourceRunId": "2a068d49-6b34-420a-8674-cfa6a7c2792d"
+      },
+      "independentLocalResult": {
+        "schemaVersion": 1,
+        "status": "finished",
+        "verdict": "works",
+        "checks": [
+          {
+            "name": "active authenticated same tenant",
+            "expected": true,
+            "actual": true,
+            "passed": true
+          },
+          {
+            "name": "anonymous actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "inactive actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "cross tenant actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing document",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing authentication flag",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "truthy string is not authentication",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing tenant does not match missing tenant",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "revoked same tenant member",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "membership for another actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "membership for another tenant",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing membership",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing membership active flag",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "truthy membership active string",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing membership actor",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing membership tenant",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          },
+          {
+            "name": "missing actor identity",
+            "expected": false,
+            "actual": false,
+            "passed": true
+          }
+        ],
+        "receipt": {
+          "id": "30836f1e-11e0-4ac5-9005-64461b85964c",
+          "at": "2026-10-04T00:13:34.552Z",
+          "startedAt": "2026-10-04T00:13:34.508Z",
+          "environmentFingerprint": "ef4907633750ab54bbfe4a70df3284c585a08cbfcdc02a3ee396f7ba1c35577c",
+          "environment": {
+            "node": "v22.22.3",
+            "platform": "darwin",
+            "arch": "arm64",
+            "evaluatorHash": "848b60aa31ba39927ad57156b5ac50116b70ae26b87568ff345c3d08ae01f754",
+            "requirementVersion": "v2",
+            "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+            "candidateFormat": "recheck-policy-v1"
+          },
+          "artifactHash": "f360533b214a133cc25bce07ba0372b3f621580f2d0f738e3c4eb6a5f350c937",
+          "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+          "requirementVersion": "v2",
+          "durationMs": 45,
+          "executionProvider": "local-node",
+          "executionId": "pid:34365",
+          "terminalStatus": "completed",
+          "exitCode": 0,
+          "signal": null,
+          "stdoutHash": "5179393c5ef6b67ab2592118c3d88acd89a46bdbb6d5385579a5f9201dcc283c",
+          "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "rawStdoutHash": "ad066630a9376ede33991d20839fabd00afe6421cdbdab051f644a12621bff6f",
+          "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "model": null,
+          "requestId": null,
+          "sourceRunId": null
+        },
+        "logs": {
+          "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"expected\":true,\"actual\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"inactive actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing document\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"revoked same tenant member\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"membership for another actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"membership for another tenant\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing membership\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing membership active flag\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"truthy membership active string\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing membership actor\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing membership tenant\",\"expected\":false,\"actual\":false,\"passed\":true},{\"name\":\"missing actor identity\",\"expected\":false,\"actual\":false,\"passed\":true}]}",
+          "stderr": ""
+        },
+        "error": null
+      }
+    }
+  ]
+}
