@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "authenticatedRemoteProof": true,
+  "serviceUrl": "https://lpnilobalapcqonatywu.supabase.co/compute/v1/recheck-evaluator",
+  "projectRef": "lpnilobalapcqonatywu",
+  "resourceId": "recheck-evaluator",
+  "health": {
+    "schemaVersion": 1,
+    "service": "recheck-evaluator",
+    "runtime": {
+      "runtime": "deno",
+      "version": "2.9.0",
+      "v8": "14.9.207.2-rusty",
+      "platform": "linux",
+      "arch": "aarch64"
+    },
+    "suiteHashes": {
+      "v1": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+      "v2": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e"
+    },
+    "candidateFormat": "recheck-policy-v1",
+    "limits": {
+      "bodyBytesExclusive": 32768,
+      "candidateBytes": 16384,
+      "nodes": 128,
+      "depth": 16
+    },
+    "isolation": "Restricted pure AST interpreter; not hostile-tenant production isolation."
+  },
+  "baseline": {
+    "schemaVersion": 1,
+    "status": "finished",
+    "verdict": "works",
+    "checks": [
+      {
+        "name": "active authenticated same tenant",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "anonymous actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "inactive actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "cross tenant actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing document",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing authentication flag",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "truthy string is not authentication",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing tenant does not match missing tenant",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "v1 membership is irrelevant",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "v1 revoked membership is irrelevant",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      }
+    ],
+    "receipt": {
+      "id": "57f8c4d6-a2ff-445a-8413-6a235e3cb60a",
+      "at": "2026-10-03T23:56:13.887Z",
+      "startedAt": "2026-10-03T23:56:12.222Z",
+      "environmentFingerprint": "bcbbabb129c969553d2ade85996d84fb6cadcd8214ddcb5191ac2ac617373059",
+      "environment": {
+        "runtime": "deno",
+        "version": "2.9.0",
+        "v8": "14.9.207.2-rusty",
+        "platform": "linux",
+        "arch": "aarch64",
+        "evaluatorHash": "45eb639ac1e117c6eefe62c5b722113182996d27219767028758091de41f8d72",
+        "requirementVersion": "v1",
+        "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+        "candidateFormat": "recheck-policy-v1",
+        "executionMode": "restricted-policy-ast"
+      },
+      "artifactHash": "a4d31fe30a737a8d019f878de8781a06ab93486ce80a46265fbaad6ffe914a38",
+      "testSuiteHash": "366a30ed14373881cf54c5dbb6ec2a1b215cb280ff54984ae5e893510dc1a487",
+      "requirementVersion": "v1",
+      "durationMs": 488,
+      "executionProvider": "Supabase Compute",
+      "executionId": "request:57f8c4d6-a2ff-445a-8413-6a235e3cb60a",
+      "terminalStatus": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "stdoutHash": "6dbabae7bafa5420e4328a34b7e7b3e5ce39aba4ebc9aee2c7f23b2311ee9fb3",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawStdoutHash": "afd36f0d10b37d72569a11703f1e61f38928969c25a150ba5b7218ea9019831f",
+      "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model": null,
+      "requestId": null,
+      "sourceRunId": null
+    },
+    "logs": {
+      "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"actual\":true,\"expected\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"inactive actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing document\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"v1 membership is irrelevant\",\"actual\":true,\"expected\":true,\"passed\":true},{\"name\":\"v1 revoked membership is irrelevant\",\"actual\":true,\"expected\":true,\"passed\":true}]}",
+      "stderr": ""
+    },
+    "error": null
+  },
+  "stale": {
+    "schemaVersion": 1,
+    "status": "finished",
+    "verdict": "fails",
+    "checks": [
+      {
+        "name": "active authenticated same tenant",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "anonymous actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "inactive actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "cross tenant actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing document",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing authentication flag",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "truthy string is not authentication",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing tenant does not match missing tenant",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "revoked same tenant member",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "membership for another actor",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "membership for another tenant",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "missing membership",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "missing membership active flag",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "truthy membership active string",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "missing membership actor",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "missing membership tenant",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      },
+      {
+        "name": "missing actor identity",
+        "actual": true,
+        "expected": false,
+        "passed": false
+      }
+    ],
+    "receipt": {
+      "id": "d93bf7aa-619b-41f5-860d-4b7da65436e4",
+      "at": "2026-10-03T23:56:14.502Z",
+      "startedAt": "2026-10-03T23:56:14.501Z",
+      "environmentFingerprint": "313ea0c3f300b8a910f8f582a0a07b346f06be724bb1a16dd710751d0af84f77",
+      "environment": {
+        "runtime": "deno",
+        "version": "2.9.0",
+        "v8": "14.9.207.2-rusty",
+        "platform": "linux",
+        "arch": "aarch64",
+        "evaluatorHash": "45eb639ac1e117c6eefe62c5b722113182996d27219767028758091de41f8d72",
+        "requirementVersion": "v2",
+        "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+        "candidateFormat": "recheck-policy-v1",
+        "executionMode": "restricted-policy-ast"
+      },
+      "artifactHash": "a4d31fe30a737a8d019f878de8781a06ab93486ce80a46265fbaad6ffe914a38",
+      "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+      "requirementVersion": "v2",
+      "durationMs": 1,
+      "executionProvider": "Supabase Compute",
+      "executionId": "request:d93bf7aa-619b-41f5-860d-4b7da65436e4",
+      "terminalStatus": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "stdoutHash": "937467a36766e40bd167fa06e024b60a6046b5c56595bd27c9a252f616203aa8",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawStdoutHash": "617c0de547670a6ef7dd6ea513edb642881c0be0aa18a6242336c1e821c86901",
+      "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model": null,
+      "requestId": null,
+      "sourceRunId": null
+    },
+    "logs": {
+      "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"actual\":true,\"expected\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"inactive actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing document\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"revoked same tenant member\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"membership for another actor\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"membership for another tenant\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"missing membership\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"missing membership active flag\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"truthy membership active string\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"missing membership actor\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"missing membership tenant\",\"actual\":true,\"expected\":false,\"passed\":false},{\"name\":\"missing actor identity\",\"actual\":true,\"expected\":false,\"passed\":false}]}",
+      "stderr": ""
+    },
+    "error": null
+  },
+  "repair": {
+    "schemaVersion": 1,
+    "status": "finished",
+    "verdict": "works",
+    "checks": [
+      {
+        "name": "active authenticated same tenant",
+        "actual": true,
+        "expected": true,
+        "passed": true
+      },
+      {
+        "name": "anonymous actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "inactive actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "cross tenant actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing document",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing authentication flag",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "truthy string is not authentication",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing tenant does not match missing tenant",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "revoked same tenant member",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "membership for another actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "membership for another tenant",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing membership",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing membership active flag",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "truthy membership active string",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing membership actor",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing membership tenant",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      },
+      {
+        "name": "missing actor identity",
+        "actual": false,
+        "expected": false,
+        "passed": true
+      }
+    ],
+    "receipt": {
+      "id": "ffcd2b6f-4898-4e34-8f0a-8acb2415465e",
+      "at": "2026-10-03T23:56:15.262Z",
+      "startedAt": "2026-10-03T23:56:15.259Z",
+      "environmentFingerprint": "313ea0c3f300b8a910f8f582a0a07b346f06be724bb1a16dd710751d0af84f77",
+      "environment": {
+        "runtime": "deno",
+        "version": "2.9.0",
+        "v8": "14.9.207.2-rusty",
+        "platform": "linux",
+        "arch": "aarch64",
+        "evaluatorHash": "45eb639ac1e117c6eefe62c5b722113182996d27219767028758091de41f8d72",
+        "requirementVersion": "v2",
+        "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+        "candidateFormat": "recheck-policy-v1",
+        "executionMode": "restricted-policy-ast"
+      },
+      "artifactHash": "34434e4d49a7a59b7c5e1073d708a537f892f5129566bc27c4e78237e36b5b6d",
+      "testSuiteHash": "961a0f7218fbb263e91496b8e410e1e9fb5f17ce407b04ad4aa1ebdf4379163e",
+      "requirementVersion": "v2",
+      "durationMs": 3,
+      "executionProvider": "Supabase Compute",
+      "executionId": "request:ffcd2b6f-4898-4e34-8f0a-8acb2415465e",
+      "terminalStatus": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "stdoutHash": "237a44ed979595cb2d65f9c6bb4e88b2b89907724b3d0ba8a913c787cc9ceb94",
+      "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawStdoutHash": "ad066630a9376ede33991d20839fabd00afe6421cdbdab051f644a12621bff6f",
+      "rawStderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model": null,
+      "requestId": null,
+      "sourceRunId": null
+    },
+    "logs": {
+      "stdout": "{\"checks\":[{\"name\":\"active authenticated same tenant\",\"actual\":true,\"expected\":true,\"passed\":true},{\"name\":\"anonymous actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"inactive actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"cross tenant actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing document\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing authentication flag\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"truthy string is not authentication\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing tenant does not match missing tenant\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"revoked same tenant member\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"membership for another actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"membership for another tenant\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing membership\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing membership active flag\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"truthy membership active string\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing membership actor\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing membership tenant\",\"actual\":false,\"expected\":false,\"passed\":true},{\"name\":\"missing actor identity\",\"actual\":false,\"expected\":false,\"passed\":true}]}",
+      "stderr": ""
+    },
+    "error": null
+  }
+}

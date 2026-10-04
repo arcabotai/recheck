@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "access-control-v2",
+  "function": "canReadDocument(actor, document, membership)",
+  "requirementVersion": "v2",
+  "rules": [
+    "actor.authenticated === true",
+    "actor.active === true",
+    "actor.tenantId === document.tenantId; both present",
+    "membership.active === true",
+    "membership.actorId === actor.id; both present",
+    "membership.tenantId === document.tenantId; both present"
+  ],
+  "missingFields": "deny required predicates",
+  "data": "synthetic only"
+}
