@@ -163,7 +163,7 @@
       const titles = {
         idle: 'No run in progress.',
         running: 'A run is in progress.',
-        complete: 'The run finished. Read each stage on its own.',
+        complete: 'Run complete.',
         blocked: 'The run is blocked.'
       };
       setText('run-observation', titles[state.status]);
@@ -176,8 +176,8 @@
         kind.className = 'eyebrow run-kind' + (cls ? ' ' + cls : '');
       }
       const failed = state.stages.filter(stage => stage.status === 'fail').map(stage => STAGE_NAMES[stage.id]);
-      let detail = 'This page cannot start a run or spend model credits.';
-      if (state.status === 'complete' && failed.length) detail = 'Completed with failing stage(s): ' + failed.join(', ') + '. Completion does not mean every check passed.';
+      let detail = 'Read-only. This page cannot start a run.';
+      if (state.status === 'complete' && failed.length) detail = 'Completed with failing stage(s): ' + failed.join(', ') + '.';
       if (state.status === 'running' && present(state.updatedAt)) {
         const age = now() - new Date(state.updatedAt).getTime();
         if (age > STALE_RUNNING_MS) detail = 'Reported as running, but the backend has not updated it for ' + Math.round(age / 1000) + ' seconds.';
@@ -228,7 +228,7 @@
       const receipts = state.stages.filter(stage => stage.receipt).length;
       setText('compute-detail', env.verified
         ? 'The backend reports a verified execution environment. ' + receipts + ' of 3 stages carry an execution receipt; inspect them in the ledger.'
-        : 'The execution environment has not been verified. A provider name alone is not an execution receipt.');
+        : 'Not verified. A provider name is not a receipt.');
     }
 
     function renderCheck(check) {
@@ -286,10 +286,9 @@
       const title = el('h3', null, plain(stage.title, STAGE_NAMES[stage.id]));
       title.setAttribute('id', 'stage-' + stage.id + '-title');
       intro.append(number, title);
+      const passing = stage.checks.filter(check => checkVerdict(check) === 'pass');
+      if (stage.checks.length) intro.append(el('p', 'stage-tally', passing.length + '/' + stage.checks.length + ' checks pass'));
       intro.append(el('p', 'stage-summary', present(stage.summary) ? plain(stage.summary, '') : 'No summary reported.'));
-      const model = el('p', 'stage-model', 'Model');
-      model.append(el('strong', null, present(stage.agent) ? stage.agent : 'Not reported'));
-      intro.append(model);
 
       const warnings = [];
       if (stage.status === 'pass' && !stage.receipt) warnings.push('Reported pass has no execution receipt.');
@@ -299,15 +298,23 @@
 
       const evidence = el('div', 'stage-evidence');
       const checks = el('div', 'check-list');
-      if (stage.checks.length) stage.checks.forEach(check => checks.append(renderCheck(check)));
-      else checks.append(el('p', 'empty-evidence', 'No independent checks reported for this stage.'));
+      // Anything that is not a clean pass stays in view; clean passes fold away.
+      stage.checks.filter(check => checkVerdict(check) !== 'pass').forEach(check => checks.append(renderCheck(check)));
+      if (!stage.checks.length) checks.append(el('p', 'empty-evidence', 'No independent checks reported for this stage.'));
       evidence.append(checks);
+      if (passing.length) {
+        const list = el('div', 'check-list');
+        passing.forEach(check => list.append(renderCheck(check)));
+        const folded = disclosure(passing.length + (passing.length === 1 ? ' passing check' : ' passing checks'), list, false);
+        folded.className = 'passing-checks';
+        evidence.append(folded);
+      }
 
       const details = el('div', 'stage-details');
       details.append(disclosure('Patch' + (present(stage.patch) ? '' : ' · not reported'),
         present(stage.patch) ? codeBlock(plain(stage.patch, '')) : el('p', 'empty-evidence', 'No patch text reported.'), false));
       details.append(disclosure('Execution log · ' + stage.logs.length + (stage.logs.length === 1 ? ' line' : ' lines'),
-        stage.logs.length ? codeBlock(stage.logs.map(line => plain(line, '')).join('\n')) : el('p', 'empty-evidence', 'No execution log reported.'), stage.status === 'fail'));
+        stage.logs.length ? codeBlock(stage.logs.map(line => plain(line, '')).join('\n')) : el('p', 'empty-evidence', 'No execution log reported.'), false));
       details.append(disclosure('Execution receipt' + (stage.receipt ? ' · ' + plain(stage.receipt.id, 'unidentified') : ' · none'),
         stage.receipt ? renderReceipt(stage.receipt) : el('p', 'empty-evidence', 'No execution receipt. Without one, this stage is not execution evidence.'), false));
       evidence.append(details);
@@ -340,13 +347,12 @@
       if (source === 'recorded' && connection.status !== 'online') {
         label = 'Recorded snapshot · not live';
         cls += ' is-unreachable';
-        text = 'The state endpoint is not reachable from this page, so no live run can be shown. Showing the published recorded run '
-          + plain(lastState.runId, '') + ', captured ' + (formatTime(lastState.updatedAt) || 'at an unreported time')
-          + '. It executed on ' + plain(lastState.environment.provider, 'an unreported provider')
-          + ', unverified; nothing new is running.' + (connection.message ? ' Reason: ' + connection.message : '');
+        text = 'Backend not connected. Recorded run from ' + (formatTime(lastState.updatedAt) || 'an unreported time')
+          + ' on ' + plain(lastState.environment.provider, 'an unreported provider') + ', unverified; nothing new is running.'
+          + (connection.message ? ' (' + connection.message + ')' : '');
       } else if (connection.status === 'online') {
         label = 'Connected · polling every 1.5s';
-        text = 'Connected. Showing the latest state received at ' + (formatTime(lastReceivedAt) || 'unknown time') + '.';
+        text = 'Connected · last update ' + (formatTime(lastReceivedAt) || 'unknown time') + '.';
       } else if (connection.status === 'unreachable') {
         label = 'Unreachable · not live';
         cls += ' is-unreachable';
@@ -399,12 +405,12 @@
     const body = result && result.body;
     const valid = body !== null && typeof body === 'object' && !Array.isArray(body);
     if (!valid) {
-      status.textContent = 'Backend not reachable from this page (' + ((result && result.error) || 'invalid /api/health response') + '). Calls below are the v1 contract.';
+      status.textContent = 'Backend not reachable (' + ((result && result.error) || 'invalid /api/health') + '). These are the v1 calls.';
       HEALTH_KEYS.forEach(key => { const chip = doc.getElementById('call-status-' + key); if (chip) { chip.textContent = 'offline'; chip.className = 'badge status-blocked'; } });
       return;
     }
     const integrations = body.integrations !== null && typeof body.integrations === 'object' ? body.integrations : {};
-    status.textContent = 'Backend reachable · ready: ' + (body.ready === true ? 'yes' : 'no') + '. Non-live calls return 503 / cannot_verify, never a fake pass.';
+    status.textContent = 'Backend up · ready: ' + (body.ready === true ? 'yes' : 'no') + '. Calls that are not live return 503 / cannot_verify, never a pass.';
     HEALTH_KEYS.forEach(key => {
       const chip = doc.getElementById('call-status-' + key);
       if (!chip) return;
