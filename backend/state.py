@@ -16,6 +16,25 @@ def blocked_state():
     }
 
 
+def _public_environment(environment, suite, provider):
+    """Accept only exact truthful Node or Deno evaluator environment schemas."""
+    import re
+    from backend.demo import SUITE_HASHES
+    common = {'platform', 'arch', 'evaluatorHash', 'requirementVersion', 'testSuiteHash', 'candidateFormat'}
+    node = common | {'node'}
+    deno = common | {'runtime', 'version', 'v8', 'executionMode'}
+    if (not isinstance(environment, dict) or set(environment) not in (node, deno)
+            or any(not isinstance(item, str) or not item or len(item) > 256 for item in environment.values())
+            or environment['requirementVersion'] != suite
+            or environment['testSuiteHash'] != SUITE_HASHES[suite]
+            or environment['candidateFormat'] != 'recheck-policy-v1'
+            or not re.fullmatch(r'[a-f0-9]{64}', environment['evaluatorHash'])
+            or (set(environment) == deno and (environment['runtime'] != 'Deno' or provider != 'Supabase Compute'))
+            or (provider == 'Supabase Compute' and set(environment) != deno)):
+        raise ValueError('invalid evaluator environment')
+    return environment
+
+
 def public_snapshot(path):
     """Only an explicit, bounded, synthetic generated snapshot may be public.
 
@@ -98,7 +117,7 @@ def public_snapshot(path):
                     raise ValueError()
                 if (any(not isinstance(receipt.get(key), str) or not receipt[key] or len(receipt[key]) > 256
                         for key in ('id', 'at', 'model', 'artifactHash', 'executionProvider', 'testSuiteHash'))
-                        or receipt.get('terminalStatus') != 'completed' or receipt.get('exitCode') != 0
+                        or receipt.get('terminalStatus') != 'completed' or type(receipt.get('exitCode')) is not int or receipt.get('exitCode') != 0
                         or receipt.get('requirementVersion') != suite
                         or not isinstance(receipt.get('executionId'), str)
                         or not isinstance(receipt.get('requestId'), str)
@@ -107,10 +126,12 @@ def public_snapshot(path):
                 for key, item in receipt.items():
                     if key != 'environment' and item is not None and not isinstance(item, (str, int)):
                         raise ValueError()
+                if environment['provider'] == 'Supabase Compute' and receipt.get('environment') is None:
+                    raise ValueError()
                 if receipt.get('environment') is not None:
-                    if not isinstance(receipt['environment'], dict) or set(receipt['environment']) != {'node', 'platform', 'arch', 'evaluatorHash', 'requirementVersion', 'testSuiteHash', 'candidateFormat'}:
-                        raise ValueError()
-                    if any(not isinstance(item, str) or len(item) > 256 for item in receipt['environment'].values()):
+                    _public_environment(receipt['environment'], suite, environment['provider'])
+                    encoded = json.dumps(receipt['environment'], ensure_ascii=False, separators=(',', ':')).encode()
+                    if receipt['environmentFingerprint'] != hashlib.sha256(encoded).hexdigest():
                         raise ValueError()
                 expected = strict_json((root / 'fixtures/access-control' / ('checks-' + suite + '.json')).read_text())['checks']
                 if len(stage['checks']) != len(expected):
