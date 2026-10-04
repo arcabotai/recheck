@@ -1,0 +1,53 @@
+{
+  "format": "recheck-policy-v1",
+  "expression": {
+    "op": "all",
+    "args": [
+      {
+        "op": "truthy",
+        "value": {
+          "field": "actor.authenticated"
+        }
+      },
+      {
+        "op": "truthy",
+        "value": {
+          "field": "actor.active"
+        }
+      },
+      {
+        "op": "eq",
+        "left": {
+          "field": "actor.tenantId"
+        },
+        "right": {
+          "field": "document.tenantId"
+        }
+      },
+      {
+        "op": "truthy",
+        "value": {
+          "field": "membership.active"
+        }
+      },
+      {
+        "op": "eq",
+        "left": {
+          "field": "membership.actorId"
+        },
+        "right": {
+          "field": "actor.id"
+        }
+      },
+      {
+        "op": "eq",
+        "left": {
+          "field": "membership.tenantId"
+        },
+        "right": {
+          "field": "document.tenantId"
+        }
+      }
+    ]
+  }
+}
