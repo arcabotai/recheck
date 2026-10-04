@@ -33,11 +33,16 @@
     return value;
   }
 
-  // A static file is never live proof: it must be a finished run with a run id and an unverified environment.
+  // A static file is never live proof; verification can only describe its captured receipts.
   function validateRecorded(value) {
     const state = validateState(value);
-    if (state.status !== 'complete' || typeof state.runId !== 'string' || !state.runId || state.environment.verified !== false) {
-      throw new Error('Recorded snapshot must be a completed run in an unverified environment.');
+    const capturedReceipts = state.stages.every(stage => stage.receipt
+      && stage.receipt.executionProvider === state.environment.provider
+      && /^[a-f0-9]{64}$/.test(stage.receipt.artifactHash || '')
+      && /^[a-f0-9]{64}$/.test(stage.receipt.environmentFingerprint || '')
+      && stage.receipt.terminalStatus === 'completed' && stage.checks.length > 0);
+    if (state.status !== 'complete' || typeof state.runId !== 'string' || !state.runId || (state.environment.verified && !capturedReceipts)) {
+      throw new Error('Recorded snapshot must be a completed run; verified capture requires execution receipts.');
     }
     return state;
   }
@@ -62,7 +67,7 @@
         const state = validateState(await response.json());
         if (stopped) return;
         hadApiState = true;
-        options.onState(state, { source: 'api' });
+        options.onState(state, { source: state.presentation && state.presentation.source === 'recorded' ? 'recorded' : 'api' });
         options.onConnection({ status: 'online', message: '' });
       } catch (error) {
         if (stopped) return;
@@ -344,12 +349,13 @@
       if (node) node.setAttribute('data-status', connection.status);
       const detail = byId('connection-detail');
       let label, text, cls = 'connection-detail';
-      if (source === 'recorded' && connection.status !== 'online') {
+      if (source === 'recorded') {
         label = 'Recorded snapshot · not live';
         cls += ' is-unreachable';
-        text = 'Backend not connected. Recorded run from ' + (formatTime(lastState.updatedAt) || 'an unreported time')
-          + ' on ' + plain(lastState.environment.provider, 'an unreported provider') + ', unverified; nothing new is running.'
-          + (connection.message ? ' (' + connection.message + ')' : '');
+        text = (connection.status === 'online' ? 'Read-only state endpoint reachable. Showing the published recorded run ' : 'The state endpoint is not reachable from this page, so no live run can be shown. Showing the published recorded run ')
+          + plain(lastState.runId, '') + ', captured ' + (formatTime(lastState.updatedAt) || 'at an unreported time')
+          + '. It executed on ' + plain(lastState.environment.provider, 'an unreported provider')
+          + (lastState.environment.verified ? ', verified at capture; nothing new is running.' : ', unverified; nothing new is running.') + (connection.message ? ' Reason: ' + connection.message : '');
       } else if (connection.status === 'online') {
         label = 'Connected · polling every 1.5s';
         text = 'Connected · last update ' + (formatTime(lastReceivedAt) || 'unknown time') + '.';
@@ -369,7 +375,7 @@
     }
 
     function onState(state, meta) {
-      source = meta && meta.source === 'recorded' ? 'recorded' : 'api';
+      source = (meta && meta.source === 'recorded') || (state.presentation && state.presentation.source === 'recorded') ? 'recorded' : 'api';
       lastState = state;
       lastReceivedAt = now();
       const serialized = JSON.stringify(state);
@@ -410,7 +416,7 @@
       return;
     }
     const integrations = body.integrations !== null && typeof body.integrations === 'object' ? body.integrations : {};
-    status.textContent = 'Backend up · ready: ' + (body.ready === true ? 'yes' : 'no') + '. Calls that are not live return 503 / cannot_verify, never a pass.';
+    status.textContent = body.service === 'recheck-read-only-presenter' ? 'Read-only presenter reachable · recorded evidence, not live. Hosted v1 calls unavailable; ready: no.' : 'Backend up · ready: ' + (body.ready === true ? 'yes' : 'no') + '. Calls that are not live return 503 / cannot_verify, never a pass.';
     HEALTH_KEYS.forEach(key => {
       const chip = doc.getElementById('call-status-' + key);
       if (!chip) return;

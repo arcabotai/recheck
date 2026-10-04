@@ -3,5 +3,8 @@
   "framework": null,
   "outputDirectory": "public",
   "buildCommand": null,
-  "installCommand": null
+  "installCommand": null,
+  "functions": {
+    "api/*.js": { "includeFiles": "public/recorded-state.json" }
+  }
 }
