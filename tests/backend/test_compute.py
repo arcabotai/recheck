@@ -22,7 +22,7 @@ def labelled_remote_fixture(text, suite):
                    model=None, requestId=None, sourceRunId=None)
     environment = receipt['environment']
     del environment['node']
-    receipt['environment'] = dict(runtime='Deno', version='2.9.0', v8='fixture-v8', **environment,
+    receipt['environment'] = dict(runtime='deno', version='2.9.0', v8='fixture-v8', **environment,
                                   executionMode='fixture-bounded-ast')
     receipt['environmentFingerprint'] = digest(json.dumps(receipt['environment'], separators=(',', ':')))
     return result

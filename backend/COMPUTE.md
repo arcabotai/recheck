@@ -35,7 +35,10 @@ missing Compute environments, and environment fingerprint contradictions. No fak
 version is introduced for Deno. The existing frontend validator/presenter accepts Deno fields
 without frontend code changes.
 
-Verification here is labelled protocol-fixture testing plus actual existing local Node execution.
-No remote calls or credential reads were performed for this integration. Parent must run the
-actual credentialed model -> Supabase -> Honcho -> Compute loop and independently read back
-Supabase before claiming live end-to-end Compute proof.
+## Parent live verification
+
+After protocol testing, the parent ran the actual credentialed workflow successfully: `2a068d49-6b34-420a-8674-cfa6a7c2792d`. Every evaluation returned authenticated Supabase Compute evidence:11/11 works, unchanged candidate9/18 fails, actual model repair18/18 works. Actual Honcho ingest/readback/search and Supabase record/readback completed; final run independently retrieved again. Snapshot: `demo/recorded-compute-state.json`.
+
+The parent caught a protocol-fixture capitalization defect before shipping: runtime fixtures used `Deno`, whereas the actual service returns exact `deno`. A RED regression replaying captured real provider bytes failed, then exact-schema validation was corrected without altering any frozen evaluator checks. Backend36 tests and actual remote execution passed.
+
+This is a fixed-project synthetic demo, not a public model-spending trigger or production hostile-tenant coding sandbox.

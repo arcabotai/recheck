@@ -29,7 +29,7 @@ def _public_environment(environment, suite, provider):
             or environment['testSuiteHash'] != SUITE_HASHES[suite]
             or environment['candidateFormat'] != 'recheck-policy-v1'
             or not re.fullmatch(r'[a-f0-9]{64}', environment['evaluatorHash'])
-            or (set(environment) == deno and (environment['runtime'] != 'Deno' or provider != 'Supabase Compute'))
+            or (set(environment) == deno and (environment['runtime'] != 'deno' or provider != 'Supabase Compute'))
             or (provider == 'Supabase Compute' and set(environment) != deno)):
         raise ValueError('invalid evaluator environment')
     return environment

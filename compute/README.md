@@ -10,7 +10,7 @@ The operator deployed one `recheck-evaluator` resource in project `lpnilobalapcq
 - Actual runtime: **Deno 2.9.0**, Linux/aarch64.
 - Artifact, suite and output hashes verified by the controller.
 
-This proves remote execution of **pinned synthetic candidates**. The earlier actual-model/Honcho/Supabase run in `demo/recorded-local-state.json` executed locally. A complete new model-to-memory-to-Compute run is a separate integration gate. Do not merge those two receipts into a fake end-to-end claim.
+This independently proves remote execution of **pinned synthetic candidates**. The earlier run in `demo/recorded-local-state.json` executed locally. A subsequent **complete actual model-to-memory-to-Compute run also passed**, independently fetched back from Supabase: `2a068d49-6b34-420a-8674-cfa6a7c2792d`, recorded in `demo/recorded-compute-state.json`. Keep these distinct run IDs/receipts; never splice separate attempts into one proof.
 
 Endpoint: `https://lpnilobalapcqonatywu.supabase.co/compute/v1/recheck-evaluator`.
 
