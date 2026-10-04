@@ -23,7 +23,8 @@ class RemoteComputeExecutor:
         self.raw_response = None
         self.gateway_key = config.get('SUPABASE_SERVICE_ROLE_KEY', '')
         self.operator_key = config.get('SUPABASE_SECRET_KEY', '')
-        if (config.get('SUPABASE_URL', '').rstrip('/') != self.ORIGIN
+        origin = config.get('SUPABASE_URL', '')
+        if (not isinstance(origin, str) or origin.rstrip('/') != self.ORIGIN
                 or not isinstance(self.gateway_key, str)
                 or not re.fullmatch(r'[A-Za-z0-9._~-]{1,8192}', self.gateway_key)
                 or not isinstance(self.operator_key, str)

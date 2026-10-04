@@ -81,6 +81,7 @@ class ComputeTests(unittest.TestCase):
     def test_missing_credentials_wrong_origin_and_transport_errors_block(self):
         from backend.compute import RemoteComputeExecutor
         for config in ({}, dict(CONFIG, SUPABASE_URL='https://other.supabase.co'),
+                       dict(CONFIG, SUPABASE_URL=None), dict(CONFIG, SUPABASE_URL=123),
                        dict(CONFIG, SUPABASE_SECRET_KEY=''), dict(CONFIG, SUPABASE_SERVICE_ROLE_KEY='')):
             with self.assertRaises(DemoError):
                 RemoteComputeExecutor(config)
