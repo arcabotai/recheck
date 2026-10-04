@@ -57,13 +57,13 @@
 
     <section class="story" id="story" aria-labelledby="story-title">
       <div class="story-head"><h2 id="story-title">How it works, in 5 steps</h2><button type="button" class="action primary" id="story-play">▶ Play the demo</button></div>
-      <p class="story-sub">Replay of a real recorded run (Claude Sonnet 4.6 + Honcho + Supabase). Nothing new runs.</p>
+      <p class="story-sub">Example: <b>TeamDocs</b>, a shared-docs app used by <b>Acme Corp</b> and <b>Globex</b>. Scores come from a real recorded run (Claude Sonnet 4.6 + Honcho + Supabase). Nothing new runs.</p>
       <ol class="story-steps">
-        <li class="story-step is-on"><span class="story-n">1</span><h3>Agent A fixes a bug</h3><p>Rule v1: a signed-in user may read documents in <b>their own company</b>.</p><p class="story-score ok" id="story-score-learn">11/11 tests pass</p><p class="story-tag">Fix saved to memory</p></li>
-        <li class="story-step is-on"><span class="story-n">2</span><h3>The rules change</h3><p>Rule v2: they also need an <b>active membership</b>. A revoked member must be blocked.</p><p class="story-tag warn">Old fix is now stale</p></li>
-        <li class="story-step is-on"><span class="story-n">3</span><h3>Agent B remembers the old fix</h3><p>Memory says "this worked before." Reusing it blindly would let <b>revoked members in</b>.</p><p class="story-tag">Recalled from Honcho</p></li>
-        <li class="story-step is-on bad"><span class="story-n">4</span><h3>Recheck tests it first</h3><p>Today's tests run against the remembered fix. <b>Revoked member: expected blocked, got allowed.</b></p><p class="story-score bad" id="story-score-replay">9/18 tests pass</p><p class="story-tag bad">Verdict: fails</p></li>
-        <li class="story-step is-on good"><span class="story-n">5</span><h3>Agent B adapts the fix</h3><p>B adds the membership checks. The <b>same tests</b> run again.</p><p class="story-score ok" id="story-score-repair">18/18 tests pass</p><p class="story-tag good">Verdict: works · saved as new memory</p></li>
+        <li class="story-step is-on"><span class="story-n">1</span><h3>Agent A fixes a bug</h3><p>Ticket: "Acme staff can't open <b>Acme Q3 Board Deck</b>." Fix: signed-in users can read their own company's docs.</p><p class="story-score ok" id="story-score-learn">11/11 tests pass</p><p class="story-tag">Fix saved to memory</p></li>
+        <li class="story-step is-on"><span class="story-n">2</span><h3>The rules change</h3><p>Acme removes <b>Maria</b> from the workspace. New rule: you also need an <b>active membership</b>. Revoked = blocked.</p><p class="story-tag warn">Old fix is now stale</p></li>
+        <li class="story-step is-on"><span class="story-n">3</span><h3>Agent B remembers the old fix</h3><p>New ticket on TeamDocs. Memory says "this worked before." Reused blindly, <b>Maria can still open the board deck</b>.</p><p class="story-tag">Recalled from Honcho</p></li>
+        <li class="story-step is-on bad"><span class="story-n">4</span><h3>Recheck tests it first</h3><p>Today's tests run on the remembered fix. <b>Maria (revoked): expected blocked, got allowed.</b> A Globex membership also opened Acme docs.</p><p class="story-score bad" id="story-score-replay">9/18 tests pass</p><p class="story-tag bad">Verdict: fails</p></li>
+        <li class="story-step is-on good"><span class="story-n">5</span><h3>Agent B adapts the fix</h3><p>B checks Maria's membership is active, hers, and in Acme. The <b>same tests</b> run again.</p><p class="story-score ok" id="story-score-repair">18/18 tests pass</p><p class="story-tag good">Verdict: works · saved as new memory</p></li>
       </ol>
       <p class="story-punch">Don't trust yesterday's fix. <b>Test it against today's project.</b></p>
     </section>
